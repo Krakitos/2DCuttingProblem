@@ -3,6 +3,7 @@ target/*
 
 #IDEA project files
 *.iml
+.idea/
 
 #Eclipse project files
 .eclipse
