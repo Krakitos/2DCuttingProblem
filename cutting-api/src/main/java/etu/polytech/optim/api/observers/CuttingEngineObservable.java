@@ -10,9 +10,10 @@ import java.util.Collection;
  * Created by Morgan on 13/03/2015.
  */
 public abstract class CuttingEngineObservable {
-    private Collection<CuttingEngineObserver> observers;
 
-    public CuttingEngineObservable() {
+    private final Collection<CuttingEngineObserver> observers;
+
+    protected CuttingEngineObservable() {
         observers = new ArrayList<>();
     }
 

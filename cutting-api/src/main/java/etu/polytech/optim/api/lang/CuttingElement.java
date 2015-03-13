@@ -35,4 +35,10 @@ public class CuttingElement {
     public int height(){
         return height;
     }
+
+    /**
+     * Compute the area of an element
+     * @return
+     */
+    public int area() { return width * height; }
 }
