@@ -7,11 +7,14 @@ import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.api.observers.CuttingEngineObserver;
 import etu.polytech.optim.api.readers.ConfigurationReader;
 import etu.polytech.optim.api.readers.FileConfigurationReader;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
@@ -58,8 +61,10 @@ public class MainController implements CuttingEngineObserver, Initializable {
     @FXML
     public GridPane solutionDisplayer;
 
+    /** Charts **/
     @FXML
-    public LineChart generationStats;
+    public LineChart<Integer, Integer> generationStats;
+    private ObservableList<XYChart.Data<Integer, Integer>> series;
 
     /**
      * Set the stage of this application
@@ -79,7 +84,29 @@ public class MainController implements CuttingEngineObserver, Initializable {
     }
 
     private void validateInputs() {
+        if(sheetPriceInput.getText().trim().length() == 0){
+            sheetPriceInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+        }else{
+            sheetPriceInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
 
+        if(sheetWidthInput.getText().trim().length() == 0){
+            sheetWidthInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+        }else{
+            sheetWidthInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
+
+        if(sheetHeightInput.getText().trim().length() == 0){
+            sheetHeightInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+        }else{
+            sheetHeightInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
+
+        if(piecesDisplayer.getItems().size() == 0){
+            piecesDisplayer.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+        }else{
+            piecesDisplayer.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
     }
 
     /**
@@ -87,22 +114,19 @@ public class MainController implements CuttingEngineObserver, Initializable {
      * @param actionEvent
      */
     public void handleAddPiece(ActionEvent actionEvent) {
-
+        System.out.println("Not implemented yet.");
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         piecesDisplayer.setCellFactory(param -> new CuttingElementView());
-        /*ObservableList<XYChart.Data<Integer, Integer>> series = FXCollections.observableArrayList();
+
+        series = FXCollections.observableArrayList();
+        generationStats.getData().add(new XYChart.Series<>("Cutting", series));
 
         for (int i = 0; i < 100; i++) {
-            XYChart.Data<Integer, Integer> data = new XYChart.Data<>();
-            data.setXValue(i*10);
-            data.setYValue((int) (Math.random() * 5000));
-            series.add(data);
+            series.add(new XYChart.Data<>(i * 100, (int)(Math.random() * 7000)));
         }
-
-        generationStats.getData().add(new XYChart.Series<>("Cutting", series));*/
     }
 
     @Override
@@ -112,19 +136,20 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @Override
     public void onGenerationStarted() {
-
+        changeProgressVisibility(true);
     }
 
     @Override
-    public void onGenerationProgress(int iteration) {
+    public void onGenerationProgress(long iteration) {
 
     }
 
     @Override
     public void onGenerationFinished(@NotNull CuttingSolution bestSolution) {
-
+        changeProgressVisibility(false);
     }
 
+    @FXML
     public void handleImport(ActionEvent actionEvent) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Cutting Problem Configuration File");
@@ -139,11 +164,26 @@ public class MainController implements CuttingEngineObserver, Initializable {
                 updateConfig(config);
             } catch (IOException e) {
                 LOGGER.warn("Exception while reading configuration file {} -> {}", file, e.getLocalizedMessage());
-                showError(e);
+                showError(e.getLocalizedMessage());
             }
         });
     }
 
+    /**
+     * Change the visibility of the progress indicator
+     */
+    private void changeProgressVisibility(final boolean visible){
+        if(visible){
+
+        }else{
+
+        }
+    }
+
+    /**
+     * Update inputs with the current configuration
+     * @param config
+     */
     private void updateConfig(@NotNull final CuttingConfiguration config) {
         LOGGER.info("Cutting Configuration updated ! (Sheet {}*{}, {})",
                 config.sheet().width(), config.sheet().height(), config.elements().entrySet());
@@ -154,8 +194,12 @@ public class MainController implements CuttingEngineObserver, Initializable {
         config.elements().entrySet().forEach(piecesDisplayer.getItems()::add);
     }
 
-    private void showError(IOException e) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, e.getLocalizedMessage(), ButtonType.OK);
+    /**
+     * Show an alert with the message associated with this exception
+     * @param error
+     */
+    private void showError(final String error) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, error, ButtonType.OK);
         alert.showAndWait();
     }
 }

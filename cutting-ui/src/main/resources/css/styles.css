@@ -33,6 +33,10 @@
     -fx-focus-color:red;
 }
 
+.list-view:error{
+    -fx-border-color: red;
+}
+
 .progress-bar{
     -fx-accent:#73BB05;
 }
