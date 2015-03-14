@@ -24,7 +24,15 @@
     -fx-background-color: #3995CD;
 }
 
+.text-field .label{
+    -fx-text-alignment: center;
+}
+
 .text-field:error{
     -fx-text-box-border: red;
     -fx-focus-color:red;
+}
+
+.progress-bar{
+    -fx-accent:#73BB05;
 }

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="etu.polytech.opti.controllers.MainController">
     <left>
         <VBox fx:id="piecesRoot" prefWidth="450" alignment="CENTER">
@@ -20,6 +21,9 @@
                         <Image url="@../icons/import_conf.png" />
                     </ImageView>
                 </graphic>
+                <tooltip>
+                    <Tooltip text="Allow you to import a predefined configuration" />
+                </tooltip>
             </Button>
 
             <!-- Sheet -->
@@ -28,12 +32,24 @@
                 <padding>
                     <Insets left="5" right="5" />
                 </padding>
-                <TextField fx:id="sheetWidthInput" promptText="Enter width" />
+                <TextField fx:id="sheetWidthInput" promptText="Enter width">
+                    <tooltip>
+                        <Tooltip text="Sheet's width" />
+                    </tooltip>
+                </TextField>
                 <Label text="x" />
-                <TextField fx:id="sheetHeightInput" promptText="Enter height" />
+                <TextField fx:id="sheetHeightInput" promptText="Enter height">
+                    <tooltip>
+                        <Tooltip text="Sheet's height" />
+                    </tooltip>
+                </TextField>
             </HBox>
             <HBox alignment="CENTER" spacing="3">
-                <TextField fx:id="sheetPriceInput" text="20" promptText="Sheet Price" />
+                <TextField fx:id="sheetPriceInput" text="20" promptText="Sheet Price">
+                    <tooltip>
+                        <Tooltip text="Price for a pattern" />
+                    </tooltip>
+                </TextField>
                 <Label text="€" />
             </HBox>
             <Separator orientation="HORIZONTAL" />
@@ -53,9 +69,17 @@
                     <padding>
                         <Insets right="5" left="5" />
                     </padding>
-                    <TextField fx:id="pieceWidthInput" promptText="Enter width" />
+                    <TextField fx:id="pieceWidthInput" promptText="Enter width">
+                        <tooltip>
+                            <Tooltip text="Piece's width" />
+                        </tooltip>
+                    </TextField>
                     <Label text="x" />
-                    <TextField fx:id="pieceHeightInput" promptText="Enter height" />
+                    <TextField fx:id="pieceHeightInput" promptText="Enter height">
+                        <tooltip>
+                            <Tooltip text="Piece's height" />
+                        </tooltip>
+                    </TextField>
                 </HBox>
 
                 <Button fx:id="addPiece" text="Add piece" onAction="#handleAddPiece" styleClass="blue-button">
@@ -64,9 +88,14 @@
                             <Image url="@../icons/add.png" />
                         </ImageView>
                     </graphic>
+                    <tooltip>
+                        <Tooltip text="Add a new kind of piece" />
+                    </tooltip>
                 </Button>
             </VBox>
             <Separator orientation="HORIZONTAL" />
+
+            <!-- Run configuration -->
             <HBox spacing="5" alignment="CENTER">
                 <padding>
                     <Insets left="5" right="5" top="5" bottom="5" />
@@ -77,31 +106,44 @@
                             <Image url="@../icons/run.png" />
                         </ImageView>
                     </graphic>
+                    <tooltip>
+                        <Tooltip text="Start the simulation" />
+                    </tooltip>
                 </Button>
-                <Button fx:id="stopBtn" text="Stop"  styleClass="blue-button">
+                <Button fx:id="stopBtn" text="Stop"  styleClass="blue-button" disable="true">
                     <graphic>
                         <ImageView fitWidth="30" fitHeight="30">
                             <Image url="@../icons/stop.png" />
                         </ImageView>
                     </graphic>
+                    <tooltip>
+                        <Tooltip text="Stop the simulation" />
+                    </tooltip>
                 </Button>
             </HBox>
         </VBox>
     </left>
     <center>
-        <VBox fillWidth="true" fx:id="solutionRoot">
-            <!--<HBox fx:id="solutionDisplayer" fillHeight="true">
+        <VBox fillWidth="true" alignment="CENTER">
+            <VBox fillWidth="true" fx:id="solutionRoot" VBox.vgrow="ALWAYS">
+                <!--<HBox fx:id="solutionDisplayer" fillHeight="true">
 
-            </HBox>-->
-            <LineChart fx:id="generationStats" title="Generation visualisation" visible="false">
-                <xAxis>
-                    <NumberAxis label="Iterations" lowerBound="0" tickUnit="100"/>
-                </xAxis>
-                <yAxis>
-                    <NumberAxis label="Price" lowerBound="0" tickUnit="100"/>
-                </yAxis>
-            </LineChart>
-            <GridPane fx:id="solutionDisplayer" />
+                </HBox>-->
+                <LineChart fx:id="generationStats" title="Generation visualisation" visible="true">
+                    <xAxis>
+                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Price" lowerBound="0" tickUnit="100"/>
+                    </yAxis>
+                </LineChart>
+                <GridPane fx:id="solutionDisplayer" />
+            </VBox>
+            <StackPane fx:id="generationProgressContainer">
+                <ProgressBar fx:id="generationProgressIndicator" progress="1" visible="true" prefWidth="1.7976931348623157e308"/>
+                <Text fx:id="generationProgressLabel" text="100%"/>
+            </StackPane>
+            <Label text="Made by Morgan Funtowicz, Mickael Shah, Valentin Degrange - Engineer Students at Polytech'Lyon (2014-2015)" style="-fx-font-style: italic"/>
         </VBox>
     </center>
 </BorderPane>
