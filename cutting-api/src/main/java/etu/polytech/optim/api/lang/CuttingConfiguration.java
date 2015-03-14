@@ -8,6 +8,7 @@ import java.util.Map;
  * Created by Morgan on 14/03/2015.
  */
 public class CuttingConfiguration {
+
     private final CuttingSheet sheet;
     private final Map<CuttingElement, Integer> elements;
 

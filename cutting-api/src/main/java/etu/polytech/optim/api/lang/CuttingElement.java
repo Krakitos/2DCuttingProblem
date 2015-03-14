@@ -41,4 +41,12 @@ public class CuttingElement {
      * @return
      */
     public double area() { return width * height; }
+
+    @Override
+    public String toString() {
+        return "CuttingElement{" +
+                "width=" + width +
+                ", height=" + height +
+                '}';
+    }
 }

@@ -43,7 +43,7 @@ public abstract class ConfigurationReader {
             elements = new HashMap<>(nbItems);
 
             for (int i = 0; i < nbItems; i++) {
-                String[] elementDeclaration = reader.readLine().split(" ");
+                String[] elementDeclaration = reader.readLine().split("\\t");
                 if(elementDeclaration.length == 3) {
                     float eWidth = Float.parseFloat(elementDeclaration[0]);
                     float eHeight = Float.parseFloat(elementDeclaration[1]);
