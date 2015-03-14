@@ -1,5 +1,5 @@
 #TArget directories
-target/*
+target/
 
 #IDEA project files
 *.iml
