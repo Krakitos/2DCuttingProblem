@@ -1,3 +1,4 @@
+import etu.polytech.opti.controllers.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -16,8 +17,16 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(Main.class.getResource("main.fxml"));
+        FXMLLoader loader = new FXMLLoader(Main.class.getResource("views/main.fxml"));
+        Parent root = loader.load();
+
+        MainController controller = loader.getController();
+        controller.setStage(primaryStage);
+
         Scene scene = getScene(root);
+        scene.getStylesheets().add("css/styles.css");
+
+        primaryStage.setTitle("Cutting Problem");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

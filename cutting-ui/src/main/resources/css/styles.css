@@ -1,0 +1,30 @@
+.button{
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-fill-width: true;
+}
+
+.button:hover{
+    -fx-cursor: hand;
+}
+
+.green-button{
+    -fx-background-color: #73BB02;
+}
+
+.red-button{
+    -fx-background-color: #DD1717;
+}
+
+.gray-button{
+    -fx-background-color: #D4D4D4;
+}
+
+.blue-button{
+    -fx-background-color: #3995CD;
+}
+
+.text-field:error{
+    -fx-text-box-border: red;
+    -fx-focus-color:red;
+}
