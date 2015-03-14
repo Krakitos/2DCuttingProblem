@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane  xmlns:fx="http://javafx.com/fxml" fx:controller="etu.polytech.opti.controllers.PiecesController">
+    <children>
+        <GridPane prefHeight="164.0" prefWidth="301.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+            <children>
+                <Label text="Width" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <Label text="Height" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="widthInput" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <TextField fx:id="heightInput" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            </children>
+            <columnConstraints>
+                <ColumnConstraints fillWidth="true" hgrow="ALWAYS" minWidth="80.0"  />
+                <ColumnConstraints fillWidth="true" hgrow="ALWAYS" minWidth="10.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
+            </rowConstraints>
+        </GridPane>
+        <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <children>
+                <Button mnemonicParsing="false" onAction="#handleOk" prefWidth="150.0" text="OK" />
+                <Button mnemonicParsing="false" onAction="#handleCancel" prefWidth="150.0" text="Cancel" />
+            </children>
+        </HBox>
+    </children>
+</AnchorPane>
