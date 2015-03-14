@@ -8,7 +8,7 @@
 <?import javafx.scene.text.Text?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="etu.polytech.opti.controllers.MainController">
     <left>
-        <VBox fx:id="piecesRoot" prefWidth="450" alignment="CENTER">
+        <VBox fx:id="piecesRoot" prefWidth="500" alignment="CENTER">
             <spacing>5</spacing>
             <!-- Title -->
             <Label text="Configuration" style="-fx-font-weight: bold" />
@@ -69,15 +69,21 @@
                     <padding>
                         <Insets right="5" left="5" />
                     </padding>
-                    <TextField fx:id="pieceWidthInput" promptText="Enter width">
+                    <TextField fx:id="pieceWidthInput" promptText="Width">
                         <tooltip>
                             <Tooltip text="Piece's width" />
                         </tooltip>
                     </TextField>
                     <Label text="x" />
-                    <TextField fx:id="pieceHeightInput" promptText="Enter height">
+                    <TextField fx:id="pieceHeightInput" promptText="Height">
                         <tooltip>
                             <Tooltip text="Piece's height" />
+                        </tooltip>
+                    </TextField>
+                    <Label text=":" />
+                    <TextField fx:id="pieceQuantityInput" promptText="Quantity">
+                        <tooltip>
+                            <Tooltip text="Amount of piece of this kind to make" />
                         </tooltip>
                     </TextField>
                 </HBox>
