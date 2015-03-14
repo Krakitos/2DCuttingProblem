@@ -44,14 +44,14 @@ public abstract class CuttingEngineObservable {
      * Notify about the starting of the generation
      */
     protected void fireGenerationStarted(){
-        observers.forEach(o -> o.onGenerationStarted());
+        observers.forEach(CuttingEngineObserver::onGenerationStarted);
     }
 
     /**
      * Notify about the progression of the generation
      * @param iteration
      */
-    protected void fireGenerationProgress(final int iteration){
+    protected void fireGenerationProgress(final long iteration){
         observers.forEach(o -> o.onGenerationProgress(iteration));
     }
 

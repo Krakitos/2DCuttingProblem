@@ -22,7 +22,7 @@ public interface CuttingEngineObserver {
      * Indicate the end of an iteration
      * @param iteration
      */
-    public void onGenerationProgress(final int iteration);
+    public void onGenerationProgress(final long iteration);
 
     /**
      * Indicate the end of the generation
