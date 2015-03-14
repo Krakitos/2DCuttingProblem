@@ -9,10 +9,10 @@ package etu.polytech.optim.api.lang;
  */
 public class CuttingElement {
 
-    private final int width;
-    private final int height;
+    private final float width;
+    private final float height;
 
-    public CuttingElement(final int width, final int height){
+    public CuttingElement(final float width, final float height){
         assert width > 0 : "Invalid width <= 0";
         assert height > 0 : "Invalid height <= 0";
 
@@ -24,7 +24,7 @@ public class CuttingElement {
      * Width of this element
      * @return
      */
-    public int width(){
+    public float width(){
         return width;
     }
 
@@ -32,7 +32,7 @@ public class CuttingElement {
      * Height of this element
      * @return
      */
-    public int height(){
+    public float height(){
         return height;
     }
 
@@ -40,5 +40,5 @@ public class CuttingElement {
      * Compute the area of an element
      * @return
      */
-    public int area() { return width * height; }
+    public double area() { return width * height; }
 }
