@@ -12,6 +12,7 @@
         <module>cutting-ui</module>
         <module>cutting-layout</module>
         <module>cutting-engine</module>
+        <module>cutting-genetic-engine</module>
     </modules>
 
     <packaging>pom</packaging>
