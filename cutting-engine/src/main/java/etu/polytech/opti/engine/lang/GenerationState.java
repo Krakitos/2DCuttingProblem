@@ -4,28 +4,25 @@ import etu.polytech.optim.api.lang.CuttingSolution;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Morgan on 13/03/2015.
  */
 public class GenerationState {
-    private long iteration;
+    private final AtomicLong iteration;
     private CuttingSolution bestSolution;
 
-    /**
-     * Define the number of iteration
-     * @param iteration
-     * @return
-     */
-    public long iteration(final long iteration){
-        return this.iteration = iteration;
+    public GenerationState() {
+        iteration = new AtomicLong(0l);
     }
+
 
     /**
      * Current number of iteration
      * @return
      */
-    public long iteration(){
+    public AtomicLong iteration(){
         return iteration;
     }
 
@@ -46,6 +43,6 @@ public class GenerationState {
      */
     public void reset(){
         bestSolution = null;
-        iteration = 0;
+        iteration.set(0l);
     }
 }
