@@ -135,7 +135,7 @@
                 <!--<HBox fx:id="solutionDisplayer" fillHeight="true">
 
                 </HBox>-->
-                <LineChart fx:id="generationStats" title="Generation visualisation" visible="true">
+                <LineChart fx:id="generationStats" title="Generation visualisation" visible="true" prefHeight="200">
                     <xAxis>
                         <NumberAxis label="Iterations" lowerBound="0" tickUnit="100"/>
                     </xAxis>
