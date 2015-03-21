@@ -3,14 +3,20 @@ package etu.polytech.optim.api.lang;
 /**
  * Created by Morgan on 11/03/2015.
  */
-public class CuttingSheet {
+public class CuttingPattern {
 
     private final int width;
     private final int height;
+    private final float price;
 
-    public CuttingSheet(int width, int height) {
+    public CuttingPattern(final int width, final int height, final float price) {
+        assert width > 0 : "Invalid width has to be > 0 (width=" + width + ")";
+        assert height > 0 : "Invalid height has to be > 0 (height=" + height + ")";
+        assert price > 0 : "Invalid price has to be > 0 (price=" + price + ")";
+
         this.width = width;
         this.height = height;
+        this.price = price;
     }
 
     /**
@@ -27,6 +33,14 @@ public class CuttingSheet {
      */
     public int height(){
         return height;
+    }
+
+    /**
+     * Price of a pattern
+     * @return
+     */
+    public float price(){
+        return price;
     }
 
     /**
