@@ -54,7 +54,7 @@ public abstract class ConfigurationReader {
             }
         }
 
-        return new CuttingConfiguration(new CuttingSheet(sheetWith, sheetHeight), elements);
+        return new CuttingConfiguration(new CuttingSheet(sheetWith, sheetHeight, 20), elements);
     }
 
     protected abstract Reader getReader() throws IOException;

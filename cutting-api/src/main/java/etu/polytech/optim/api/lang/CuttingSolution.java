@@ -1,10 +1,5 @@
 package etu.polytech.optim.api.lang;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.Map;
-
 /**
  * Created by Morgan on 11/03/2015.
  */
@@ -14,12 +9,14 @@ import java.util.Map;
  */
 public class CuttingSolution {
 
-    private final Map<CuttingSheet, Integer> patterns;
-    private final int patternPrice;
+    private final double[] patterns;
+    private final int[][] layout;
+    private final double fitness;
 
-    public CuttingSolution(@NotNull final Map<CuttingSheet, Integer> patterns, final int patternPrice) {
-        this.patterns = patterns;
-        this.patternPrice = patternPrice;
+    public CuttingSolution(double[] points, int[][] layout, double fitness) {
+        this.patterns = points;
+        this.layout = layout;
+        this.fitness = fitness;
     }
 
     /**
@@ -27,15 +24,23 @@ public class CuttingSolution {
      * Total price of the solution
      * @return
      */
-    public int fitness(){
-        return patterns.entrySet().stream().mapToInt(entry -> entry.getValue() * patternPrice).sum();
+    public double fitness(){
+        return fitness;
     }
 
     /**
      * Pattern and the number of time to print the pattern
      * @return
      */
-    public Collection<Map.Entry<CuttingSheet, Integer>> patterns(){
-        return patterns.entrySet();
+    public double[] patterns(){
+        return patterns;
+    }
+
+    /**
+     * Number of piece by pattern
+     * @return
+     */
+    public int[][] layout(){
+        return layout;
     }
 }
