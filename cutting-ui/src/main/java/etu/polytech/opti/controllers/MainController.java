@@ -17,6 +17,8 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -36,19 +37,25 @@ import java.util.ResourceBundle;
 public class MainController implements CuttingEngineObserver, Initializable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    /** UI **/
+
+    private final PseudoClass TEXTFIELD_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
+
+    /** Stage **/
     private Stage stage;
 
     /** Configuration Inputs **/
-    private final PseudoClass TEXTFIELD_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
     @FXML
     public TextField sheetWidthInput;
-
     @FXML
     public TextField sheetHeightInput;
-
     @FXML
     public TextField sheetPriceInput;
+
+    /** Stop **/
+    @FXML
+    public ComboBox<String> stoppingChooser;
+    @FXML
+    public TextField stoppingValueInput;
 
     /** Buttons **/
     @FXML
@@ -56,7 +63,17 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     /** Containers **/
     @FXML
-    public ListView<Map.Entry<CuttingElement, Integer>> piecesDisplayer;
+    public ListView<CuttingElement> piecesDisplayer;
+
+    /** Progress **/
+    @FXML
+    public StackPane generationProgressContainer;
+
+    @FXML
+    public ProgressBar generationProgressIndicator;
+
+    @FXML
+    public Text generationProgressLabel;
 
     @FXML
     public GridPane solutionDisplayer;
@@ -107,6 +124,12 @@ public class MainController implements CuttingEngineObserver, Initializable {
         }else{
             piecesDisplayer.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
+
+        if(stoppingValueInput.getText().isEmpty()){
+            stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+        }else{
+            stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
     }
 
     /**
@@ -119,14 +142,17 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        stoppingChooser.setItems(FXCollections.observableArrayList("Iterations", "Duration"));
+        stoppingChooser.setValue(stoppingChooser.itemsProperty().getValue().get(0));
+
         piecesDisplayer.setCellFactory(param -> new CuttingElementView());
 
-        series = FXCollections.observableArrayList();
+ /*       series = FXCollections.observableArrayList();
         generationStats.getData().add(new XYChart.Series<>("Cutting", series));
 
         for (int i = 0; i < 100; i++) {
             series.add(new XYChart.Data<>(i * 100, (int)(Math.random() * 7000)));
-        }
+        }*/
     }
 
     @Override
@@ -186,12 +212,13 @@ public class MainController implements CuttingEngineObserver, Initializable {
      */
     private void updateConfig(@NotNull final CuttingConfiguration config) {
         LOGGER.info("Cutting Configuration updated ! (Sheet {}*{}, {})",
-                config.sheet().width(), config.sheet().height(), config.elements().entrySet());
+                config.sheet().width(), config.sheet().height(), config.elements());
+
         sheetWidthInput.setText(String.valueOf(config.sheet().width()));
         sheetHeightInput.setText(String.valueOf(config.sheet().height()));
 
         piecesDisplayer.getItems().clear();
-        config.elements().entrySet().forEach(piecesDisplayer.getItems()::add);
+        config.elements().forEach(piecesDisplayer.getItems()::add);
     }
 
     /**

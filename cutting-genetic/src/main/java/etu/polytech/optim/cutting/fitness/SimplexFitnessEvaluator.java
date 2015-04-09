@@ -3,6 +3,7 @@ package etu.polytech.optim.cutting.fitness;
 import etu.polytech.opti.layout.CuttingPackager;
 import etu.polytech.opti.layout.exceptions.LayoutException;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
+import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
 import etu.polytech.optim.genetic.fitness.FitnessEvaluator;
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Morgan on 08/04/2015.
@@ -133,18 +134,19 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
             LOGGER.trace(SIMPLEX_CONSTRAINTS_MARKER, "Computing Simplex Constraints");
 
         final int piecesNb = configuration.elements().size();
-        final List<Integer> asking = new ArrayList<>(configuration.elements().values());
         final Collection<LinearConstraint> constraintList = new ArrayList<>(layout.length);
+        final AtomicInteger inc = new AtomicInteger(0);
 
+        configuration.elements().parallelStream().mapToInt(CuttingElement::asking).forEach(asking -> {
 
-        for (int i = 0; i < asking.size(); i++) {
             final double[] coeffs = new double[piecesNb];
             for (int[] pattern : layout) {
+                int i = inc.getAndIncrement();
                 coeffs[i] = pattern[i];
             }
 
-            constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, asking.get(i)));
-        }
+            constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, asking));
+        });
 
         if(LOGGER.isDebugEnabled())
             LOGGER.debug(SIMPLEX_CONSTRAINTS_MARKER, "Computed {} constraints for {} pieces", constraintList.size(), configuration.elements().size());
