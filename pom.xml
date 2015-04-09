@@ -11,8 +11,8 @@
         <module>cutting-api</module>
         <module>cutting-ui</module>
         <module>cutting-layout</module>
-        <module>cutting-engine</module>
-        <module>cutting-genetic-engine</module>
+        <module>genetic-algorithm</module>
+        <module>cutting-genetic</module>
     </modules>
 
     <packaging>pom</packaging>
