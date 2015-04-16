@@ -1,4 +1,4 @@
-package etu.polytech.opti.layout.exceptions;
+package etu.polytech.optim.layout.exceptions;
 
 /**
  * Created by Morgan on 19/03/2015.
