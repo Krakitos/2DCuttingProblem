@@ -62,20 +62,18 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
 
         Chromosome fittest = population.fittestChromosome();
 
-        fireNewSolutionFound(fittest);
+        fireNewSolutionFound(0, fittest);
         fireGenerationStarted();
 
         while(!stop.isReached()){
 
-            if(LOGGER.isDebugEnabled()){
-                LOGGER.debug("Starting iteration {}", iterations.get());
-            }
-
-            fireNewIteration(iterations.incrementAndGet());
+            iterations.incrementAndGet();
 
             if(LOGGER.isDebugEnabled()){
                 LOGGER.debug("Starting iteration {}", iterations.get());
             }
+
+            fireProgress();
 
             final ChromosomePair selection = selectOperator.select(population);
 
@@ -118,7 +116,7 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
                             fittest, fittest.fitness(), fittestInPopulation, fittestInPopulation.fitness());
 
                     fittest = fittestInPopulation;
-                    fireNewSolutionFound(fittest);
+                    fireNewSolutionFound(iterations.get(), fittest);
                 }
             }
         }

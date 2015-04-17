@@ -15,19 +15,13 @@ public interface GeneticAlgorithmObserver {
 
     /**
      * Dispatched when a new iteration start
-     * @param index
      */
-    void onGenerationNewIteration(final long index);
+    void onGenerationProgress();
 
     /**
      * Dispatched when a new solution, better than the previous, is found
+     * @param iteration
      * @param chromosome
      */
-    void onBetterSolutionFound(@NotNull final Chromosome chromosome);
-
-    /**
-     * Dispatched when the algorithm generation finished
-     * @param chromosome Fittest chromosome
-     */
-    void onGenerationFinished(@NotNull final Chromosome chromosome);
+    void onBetterSolutionFound(long iteration, @NotNull final Chromosome chromosome);
 }
