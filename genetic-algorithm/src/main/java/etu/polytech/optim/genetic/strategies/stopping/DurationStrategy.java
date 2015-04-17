@@ -24,4 +24,8 @@ public class DurationStrategy implements StoppingCondition {
 
         return System.nanoTime() < endingTime;
     }
+
+    public long endingTime(){
+        return endingTime;
+    }
 }

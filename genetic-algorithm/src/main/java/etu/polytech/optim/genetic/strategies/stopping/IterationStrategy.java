@@ -21,4 +21,12 @@ public class IterationStrategy implements StoppingCondition {
     public boolean isReached() {
         return iterations.incrementAndGet() == maxIterations;
     }
+
+    public long maxIterations(){
+        return maxIterations;
+    }
+
+    public long currentIteration(){
+        return iterations.get();
+    }
 }
