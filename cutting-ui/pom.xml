@@ -19,8 +19,8 @@
         </dependency>
         <dependency>
             <groupId>etu.polytech.optim</groupId>
-            <artifactId>cutting-engine</artifactId>
-            <version>${version}</version>
+            <artifactId>cutting-genetic</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -31,6 +31,11 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.3.2</version>
         </dependency>
     </dependencies>
 
