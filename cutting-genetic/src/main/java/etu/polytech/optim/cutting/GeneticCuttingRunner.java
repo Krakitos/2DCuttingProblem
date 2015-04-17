@@ -1,75 +1,105 @@
 package etu.polytech.optim.cutting;
 
-import etu.polytech.opti.layout.CuttingPackager;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingSolution;
+import etu.polytech.optim.api.observers.CuttingEngineObservable;
+import etu.polytech.optim.api.observers.ProgressObservable;
 import etu.polytech.optim.cutting.fitness.SimplexFitnessEvaluator;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
+import etu.polytech.optim.cutting.lang.stop.StoppingConditionObservable;
 import etu.polytech.optim.genetic.GeneticAlgorithm;
 import etu.polytech.optim.genetic.lang.Chromosome;
 import etu.polytech.optim.genetic.lang.Population;
+import etu.polytech.optim.genetic.lang.chromosomes.FixedSizeChromosome;
 import etu.polytech.optim.genetic.strategies.CrossoverPolicy;
 import etu.polytech.optim.genetic.strategies.MutationPolicy;
 import etu.polytech.optim.genetic.strategies.SelectionPolicy;
 import etu.polytech.optim.genetic.strategies.StoppingCondition;
 import etu.polytech.optim.genetic.utils.observers.GeneticAlgorithmObserver;
+import etu.polytech.optim.layout.CuttingPackager;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * Created by Morgan on 08/04/2015.
  */
-public class GeneticCuttingRunner implements GeneticAlgorithmObserver {
+public class GeneticCuttingRunner extends CuttingEngineObservable implements GeneticAlgorithmObserver {
 
+    private final CuttingConfiguration configuration;
+    private final CuttingPackager packager;
     private final GeneticAlgorithm genetic;
+    private final SimplexFitnessEvaluator evaluator;
+
+    private final ProgressObservable progressObservable;
 
     public GeneticCuttingRunner(@NotNull final CuttingConfiguration configuration,
                                 @NotNull final CuttingPackager packager,
-                                @NotNull final StoppingCondition stop,
+                                @NotNull final StoppingConditionObservable stop,
                                 @NotNull final SelectionPolicy select,
                                 @NotNull final CrossoverPolicy crossover,
                                 @NotNull final MutationPolicy mutate) {
 
-        genetic = new GeneticAlgorithm(stop, select, crossover, mutate, new SimplexFitnessEvaluator(configuration, packager));
+        this.configuration = configuration;
+        this.packager = packager;
+        this.progressObservable = stop;
+        this.evaluator = new SimplexFitnessEvaluator(configuration, packager);
+        this.genetic = new GeneticAlgorithm(stop, select, crossover, mutate, evaluator);
     }
 
 
     public CuttingSolution start(){
         final Population population = new Population(1000);
 
+        initPopulation(population);
+
         genetic.addObserver(this);
 
         final Chromosome fittest = genetic.start(population);
-        final GeneticSolution geneticSolution = null;
+        final GeneticSolution solution = evaluator.computeFitness(fittest);
 
-        return geneticSolution.solution();
+        assert solution != null : "Invalid null solution";
+
+        fireGenerationFinished(solution.solution());
+
+        return solution.solution();
+    }
+
+    private void initPopulation(Population population) {
+        Random random = new Random();
+
+        for (int i = 0; i < 2; i++) {
+            int[] rep = new int[configuration.elements().size()];
+            Arrays.setAll(rep, index -> 1 + random.nextInt(3));
+
+            Chromosome c = new FixedSizeChromosome(rep);
+            c.fitness(evaluator.computeFitness(c).fitness());
+
+            population.addChromosome(c);
+        }
     }
 
     @Override
     public void onGenerationStarted() {
-
+        fireGenerationStarted();
     }
 
     @Override
-    public void onGenerationNewIteration(long index) {
-
+    public void onGenerationProgress() {
+        fireGenerationProgress(progressObservable);
     }
 
     @Override
-    public void onBetterSolutionFound(@NotNull Chromosome chromosome) {
-
-    }
-
-    @Override
-    public void onGenerationFinished(@NotNull Chromosome chromosome) {
-
+    public void onBetterSolutionFound(long iteration, @NotNull Chromosome chromosome) {
+        fireNewSolution(iteration, chromosome.fitness());
     }
 
     public static class Builder {
         private CuttingConfiguration configuration;
         private CuttingPackager packager;
-        private StoppingCondition stoppingCondition;
+        private StoppingConditionObservable stoppingCondition;
         private SelectionPolicy selectionPolicy;
         private CrossoverPolicy crossoverPolicy;
         private MutationPolicy mutationPolicy;
@@ -78,48 +108,54 @@ public class GeneticCuttingRunner implements GeneticAlgorithmObserver {
             return configuration;
         }
 
-        public void setConfiguration(CuttingConfiguration configuration) {
+        public Builder setConfiguration(CuttingConfiguration configuration) {
             this.configuration = configuration;
+            return this;
         }
 
         public CuttingPackager getPackager() {
             return packager;
         }
 
-        public void setPackager(CuttingPackager packager) {
+        public Builder setPackager(CuttingPackager packager) {
             this.packager = packager;
+            return this;
         }
 
         public StoppingCondition getStoppingCondition() {
             return stoppingCondition;
         }
 
-        public void setStoppingCondition(StoppingCondition stoppingCondition) {
+        public Builder setStoppingCondition(StoppingConditionObservable stoppingCondition) {
             this.stoppingCondition = stoppingCondition;
+            return this;
         }
 
         public SelectionPolicy getSelectionPolicy() {
             return selectionPolicy;
         }
 
-        public void setSelectionPolicy(SelectionPolicy selectionPolicy) {
+        public Builder setSelectionPolicy(SelectionPolicy selectionPolicy) {
             this.selectionPolicy = selectionPolicy;
+            return this;
         }
 
         public CrossoverPolicy getCrossoverPolicy() {
             return crossoverPolicy;
         }
 
-        public void setCrossoverPolicy(CrossoverPolicy crossoverPolicy) {
+        public Builder setCrossoverPolicy(CrossoverPolicy crossoverPolicy) {
             this.crossoverPolicy = crossoverPolicy;
+            return this;
         }
 
         public MutationPolicy getMutationPolicy() {
             return mutationPolicy;
         }
 
-        public void setMutationPolicy(MutationPolicy mutationPolicy) {
+        public Builder setMutationPolicy(MutationPolicy mutationPolicy) {
             this.mutationPolicy = mutationPolicy;
+            return this;
         }
 
         public GeneticCuttingRunner build(){

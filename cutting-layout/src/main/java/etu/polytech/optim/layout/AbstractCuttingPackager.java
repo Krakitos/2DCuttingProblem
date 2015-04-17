@@ -1,4 +1,4 @@
-package etu.polytech.opti.layout;
+package etu.polytech.optim.layout;
 
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 

@@ -4,16 +4,19 @@ package etu.polytech.optim.api.lang;
  * Created by Morgan on 11/03/2015.
  */
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Represents a solution for the cutting problem
  */
 public class CuttingSolution {
 
     private final double[] patterns;
-    private final int[][] layout;
+    private final List<Collection<CuttingLayoutElement>> layout;
     private final double fitness;
 
-    public CuttingSolution(double[] points, int[][] layout, double fitness) {
+    public CuttingSolution(double[] points, List<Collection<CuttingLayoutElement>> layout, double fitness) {
         this.patterns = points;
         this.layout = layout;
         this.fitness = fitness;
@@ -40,7 +43,7 @@ public class CuttingSolution {
      * Number of piece by pattern
      * @return
      */
-    public int[][] layout(){
+    public List<Collection<CuttingLayoutElement>> layout(){
         return layout;
     }
 }

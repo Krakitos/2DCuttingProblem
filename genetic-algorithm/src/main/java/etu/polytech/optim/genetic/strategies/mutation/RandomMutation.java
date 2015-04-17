@@ -26,7 +26,7 @@ public class RandomMutation implements MutationPolicy {
 
         for (int i = 0; i < chromosome.length(); i++) {
             if(i == index)
-                c[i] = RANDOM.nextInt(maxGeneValue);
+                c[i] = 1 + RANDOM.nextInt(maxGeneValue);
             else
                 c[i] = chromosome.genomeAt(i);
         }

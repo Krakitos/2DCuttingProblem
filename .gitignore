@@ -1,6 +1,8 @@
 #Target directories
 target/
 
+**.class
+
 #IDEA project files
 *.iml
 .idea/

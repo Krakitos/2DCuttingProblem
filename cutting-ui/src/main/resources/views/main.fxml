@@ -102,50 +102,53 @@
             <Separator orientation="HORIZONTAL" />
 
             <!-- Run configuration -->
-            <HBox spacing="5" alignment="CENTER">
-                <padding>
-                    <Insets left="5" right="5" top="5" bottom="5" />
-                </padding>
-                <Button fx:id="runBtn" text="Run" styleClass="blue-button" onAction="#handleRun">
-                    <graphic>
-                        <ImageView fitWidth="30" fitHeight="30">
-                            <Image url="@../icons/run.png" />
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="Start the simulation" />
-                    </tooltip>
-                </Button>
-                <Button fx:id="stopBtn" text="Stop"  styleClass="blue-button" disable="true">
-                    <graphic>
-                        <ImageView fitWidth="30" fitHeight="30">
-                            <Image url="@../icons/stop.png" />
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="Stop the simulation" />
-                    </tooltip>
-                </Button>
-            </HBox>
+            <VBox>
+                <HBox>
+                    <TextField fx:id="stoppingValueInput" promptText="Iterations/Duration" prefWidth="260" />
+                    <ComboBox fx:id="stoppingChooser"/>
+                </HBox>
+                <HBox spacing="5" alignment="CENTER">
+                    <padding>
+                        <Insets left="5" right="5" top="5" bottom="5" />
+                    </padding>
+                    <Button fx:id="runBtn" text="Run" styleClass="blue-button" onAction="#handleRun">
+                        <graphic>
+                            <ImageView fitWidth="30" fitHeight="30">
+                                <Image url="@../icons/run.png" />
+                            </ImageView>
+                        </graphic>
+                        <tooltip>
+                            <Tooltip text="Start the simulation" />
+                        </tooltip>
+                    </Button>
+                    <Button fx:id="stopBtn" text="Stop"  styleClass="blue-button" disable="true">
+                        <graphic>
+                            <ImageView fitWidth="30" fitHeight="30">
+                                <Image url="@../icons/stop.png" />
+                            </ImageView>
+                        </graphic>
+                        <tooltip>
+                            <Tooltip text="Stop the simulation" />
+                        </tooltip>
+                    </Button>
+                </HBox>
+            </VBox>
         </VBox>
     </left>
     <center>
         <VBox fillWidth="true" alignment="CENTER">
             <VBox fillWidth="true" fx:id="solutionRoot" VBox.vgrow="ALWAYS">
-                <!--<HBox fx:id="solutionDisplayer" fillHeight="true">
-
-                </HBox>-->
-                <LineChart fx:id="generationStats" title="Generation visualisation" visible="true" prefHeight="200">
+                <LineChart fx:id="generationStats" title="Generation visualisation" visible="false" prefHeight="250">
                     <xAxis>
-                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100"/>
+                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100" autoRanging="true"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis label="Price" lowerBound="0" tickUnit="100"/>
+                        <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
                     </yAxis>
                 </LineChart>
                 <GridPane fx:id="solutionDisplayer" />
             </VBox>
-            <StackPane fx:id="generationProgressContainer">
+            <StackPane fx:id="generationProgressContainer" visible="false">
                 <ProgressBar fx:id="generationProgressIndicator" progress="1" visible="true" prefWidth="1.7976931348623157e308"/>
                 <Text fx:id="generationProgressLabel" text="100%"/>
             </StackPane>

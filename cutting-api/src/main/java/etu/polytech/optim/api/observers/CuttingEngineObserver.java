@@ -9,24 +9,24 @@ import org.jetbrains.annotations.NotNull;
 public interface CuttingEngineObserver {
     /**
      * Indicate that a new solution is available
-     * @param solution
+     * @param fitness
      */
-    public void onNewSolution(@NotNull final CuttingSolution solution);
+    void onNewSolution(final long iteration, @NotNull final double fitness);
 
     /**
      * Indicate the start of the generation
      */
-    public void onGenerationStarted();
+    void onGenerationStarted();
 
     /**
      * Indicate the end of an iteration
-     * @param iteration
+     * @param progressObservable
      */
-    public void onGenerationProgress(final long iteration);
+    void onGenerationProgress(final ProgressObservable progressObservable);
 
     /**
      * Indicate the end of the generation
      * @param bestSolution
      */
-    public void onGenerationFinished(@NotNull final CuttingSolution bestSolution);
+    void onGenerationFinished(@NotNull final CuttingSolution bestSolution);
 }

@@ -9,22 +9,35 @@ package etu.polytech.optim.api.lang;
  */
 public class CuttingElement {
 
-    private final float width;
-    private final float height;
+    private final int id;
+    private final double width;
+    private final double height;
+    private final int asking;
 
-    public CuttingElement(final float width, final float height){
+    public CuttingElement(final int id, final double width, final double height, final int asking){
         assert width > 0 : "Invalid width <= 0";
         assert height > 0 : "Invalid height <= 0";
+        assert asking > 0 : "Invalid asking <= 0";
 
+        this.id = id;
         this.width = width;
         this.height = height;
+        this.asking = asking;
+    }
+
+    /**
+     * Id of the piece
+     * @return
+     */
+    public int id(){
+        return id;
     }
 
     /**
      * Width of this element
      * @return
      */
-    public float width(){
+    public double width(){
         return width;
     }
 
@@ -32,7 +45,7 @@ public class CuttingElement {
      * Height of this element
      * @return
      */
-    public float height(){
+    public double height(){
         return height;
     }
 
@@ -42,11 +55,21 @@ public class CuttingElement {
      */
     public double area() { return width * height; }
 
+    /**
+     * Number of item to print
+     * @return
+     */
+    public int asking(){
+        return asking;
+    }
+
     @Override
     public String toString() {
         return "CuttingElement{" +
-                "width=" + width +
+                "id=" + id +
+                ", width=" + width +
                 ", height=" + height +
+                ", asking=" + asking +
                 '}';
     }
 }

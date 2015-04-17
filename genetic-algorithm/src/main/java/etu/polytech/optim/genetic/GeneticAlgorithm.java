@@ -56,26 +56,24 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
 
     public Chromosome start(@NotNull final Population population){
 
-        assert population.size() > 2 : "Invalid initial Population, need to have at least two chromosomes (got " + population.size() + ")";
+        assert population.size() >= 2 : "Invalid initial Population, need to have at least two chromosomes (got " + population.size() + ")";
 
         start.set(System.nanoTime());
 
         Chromosome fittest = population.fittestChromosome();
 
-        fireNewSolutionFound(fittest);
+        fireNewSolutionFound(0, fittest);
         fireGenerationStarted();
 
         while(!stop.isReached()){
 
-            if(LOGGER.isDebugEnabled()){
-                LOGGER.debug("Starting iteration {}", iterations.get());
-            }
-
-            fireNewIteration(iterations.incrementAndGet());
+            iterations.incrementAndGet();
 
             if(LOGGER.isDebugEnabled()){
                 LOGGER.debug("Starting iteration {}", iterations.get());
             }
+
+            fireProgress();
 
             final ChromosomePair selection = selectOperator.select(population);
 
@@ -118,7 +116,7 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
                             fittest, fittest.fitness(), fittestInPopulation, fittestInPopulation.fitness());
 
                     fittest = fittestInPopulation;
-                    fireNewSolutionFound(fittest);
+                    fireNewSolutionFound(iterations.get(), fittest);
                 }
             }
         }
