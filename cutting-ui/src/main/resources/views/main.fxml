@@ -140,10 +140,10 @@
             <VBox fillWidth="true" fx:id="solutionRoot" VBox.vgrow="ALWAYS">
                 <LineChart fx:id="generationStats" title="Generation visualisation" visible="false" prefHeight="250">
                     <xAxis>
-                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100"/>
+                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100" autoRanging="true"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis label="Price" lowerBound="0" tickUnit="100"/>
+                        <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
                     </yAxis>
                 </LineChart>
                 <GridPane fx:id="solutionDisplayer" />
