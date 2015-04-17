@@ -33,6 +33,18 @@ public class CuttingLayoutElement {
     }
 
     /**
+     * Width of this element
+     * @return
+     */
+    public double width(){ return rotate ? element.height() : element().width(); }
+
+    /**
+     * Height of this element
+     * @return
+     */
+    public double height (){ return rotate ? element.width() : element().height(); }
+
+    /**
      * Indicate whether the piece is rotated or not
      * @return
      */
