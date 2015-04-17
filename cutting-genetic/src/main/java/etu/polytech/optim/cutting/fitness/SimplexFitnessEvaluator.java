@@ -1,13 +1,13 @@
 package etu.polytech.optim.cutting.fitness;
 
-import etu.polytech.opti.layout.CuttingPackager;
-import etu.polytech.opti.layout.exceptions.LayoutException;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
-import etu.polytech.optim.api.lang.CuttingElement;
+import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
 import etu.polytech.optim.genetic.fitness.FitnessEvaluator;
 import etu.polytech.optim.genetic.lang.Chromosome;
+import etu.polytech.optim.layout.CuttingPackager;
+import etu.polytech.optim.layout.exceptions.LayoutException;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.linear.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
@@ -21,7 +21,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+
+import static java.util.stream.Collectors.counting;
 
 /**
  * Created by Morgan on 08/04/2015.
@@ -59,7 +61,10 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
             LOGGER.debug("Computing fitness with Chromosome {}", repToString);
 
         try {
-            int[][] layout = packager.layout(rep);
+            if(LOGGER.isTraceEnabled())
+                LOGGER.trace("Trying to layout {}", repToString);
+
+            List<Collection<CuttingLayoutElement>> layout = packager.layout(rep);
             final CuttingSolution cuttingSolution = doSimplex(layout);
             solution = new GeneticSolution(cuttingSolution);
 
@@ -79,29 +84,32 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param layout
      * @return
      */
-    private CuttingSolution doSimplex(final int[][] layout) {
-        if(LOGGER.isDebugEnabled())
-            LOGGER.debug(SIMPLEX_MARKER, "Starting");
+    private CuttingSolution doSimplex(final List<Collection<CuttingLayoutElement>> layout) {
 
-        final int patternCost = configuration.sheet().price() * layout.length;
+        final int patternCost = configuration.sheet().price() * layout.size();
 
         final LinearConstraintSet constraints = computeConstraints(layout);
         final LinearObjectiveFunction objectiveFunction = computeObjFunction(layout, patternCost);
 
-        final PointValuePair optimal = simplex.optimize(objectiveFunction, constraints, GoalType.MINIMIZE, new NonNegativeConstraint(true));
+        double fitness = -1;
+        try {
+            final PointValuePair optimal = simplex.optimize(objectiveFunction, constraints, GoalType.MINIMIZE, new NonNegativeConstraint(true));
 
+            double[] optimalPoint = optimal.getPoint();
 
-        LOGGER.info(SIMPLEX_MARKER, "Simplex done, best fit is {}", Arrays.toString(optimal.getPoint()));
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug(SIMPLEX_MARKER, "Simplex done, best fit is {}", Arrays.toString(optimalPoint));
 
-        double fitness = 0;
+            for (double v : optimalPoint) {
+                fitness += Math.ceil(v);
+            }
 
-        for (double v : optimal.getPoint()) {
-            fitness += v;
+            return new CuttingSolution(optimal.getPoint(), layout, fitness);
+        }catch (NoFeasibleSolutionException e){
+            LOGGER.warn(e);
+            return new CuttingSolution(null, layout, fitness);
         }
 
-        LOGGER.info(SIMPLEX_MARKER, "Computed fitness is {}", fitness);
-
-        return new CuttingSolution(optimal.getPoint(), layout, fitness);
     }
 
     /**
@@ -109,17 +117,15 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param layout
      * @return
      */
-    private LinearObjectiveFunction computeObjFunction(int[][] layout, int patternsCost) {
+    private LinearObjectiveFunction computeObjFunction(Collection<Collection<CuttingLayoutElement>> layout, int patternsCost) {
         if(LOGGER.isTraceEnabled())
             LOGGER.trace(SIMPLEX_OBJ_FUNC_MARKER, "Computing objective function");
 
-        double[] coeffs = new double[layout.length];
-        for (int i = 0; i < coeffs.length; i++) {
-            coeffs[i] = 1d;
-        }
+        double[] coeffs = new double[layout.size()];
+        Arrays.fill(coeffs, 1d);
 
         if(LOGGER.isDebugEnabled())
-            LOGGER.debug(SIMPLEX_OBJ_FUNC_MARKER, "Computed objective function coefs {}", Arrays.toString(coeffs));
+            LOGGER.debug(SIMPLEX_OBJ_FUNC_MARKER, "Computed objective function coefs {} + {}", Arrays.toString(coeffs), patternsCost);
 
         return new LinearObjectiveFunction(coeffs, patternsCost);
     }
@@ -129,23 +135,22 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param layout
      * @return
      */
-    private LinearConstraintSet computeConstraints(int[][] layout) {
+    private LinearConstraintSet computeConstraints(List<Collection<CuttingLayoutElement>> layout) {
         if(LOGGER.isTraceEnabled())
             LOGGER.trace(SIMPLEX_CONSTRAINTS_MARKER, "Computing Simplex Constraints");
 
         final int piecesNb = configuration.elements().size();
-        final Collection<LinearConstraint> constraintList = new ArrayList<>(layout.length);
-        final AtomicInteger inc = new AtomicInteger(0);
+        final Collection<LinearConstraint> constraintList = new ArrayList<>(layout.size());
 
-        configuration.elements().parallelStream().mapToInt(CuttingElement::asking).forEach(asking -> {
+        configuration.elements().forEach(element -> {
+            //Nombre de fois ou la piece i apparait dans le pattern j
+            double[] coeffs = new double[layout.size()];
 
-            final double[] coeffs = new double[piecesNb];
-            for (int[] pattern : layout) {
-                int i = inc.getAndIncrement();
-                coeffs[i] = pattern[i];
-            }
+            Arrays.setAll(coeffs, index -> {
+                return layout.get(index).parallelStream().filter(e -> e.element() == element).collect(counting()).doubleValue();
+            });
 
-            constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, asking));
+            constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, element.asking()));
         });
 
         if(LOGGER.isDebugEnabled())
@@ -159,7 +164,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param c
      * @return
      */
-    private int[] getGenomes(@NotNull final Chromosome c){
+    private static int[] getGenomes(@NotNull final Chromosome c){
         int[] rep = new int[c.length()];
 
         for (int i = 0; i < rep.length; i++) {
