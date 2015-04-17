@@ -56,7 +56,7 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
 
     public Chromosome start(@NotNull final Population population){
 
-        assert population.size() > 2 : "Invalid initial Population, need to have at least two chromosomes (got " + population.size() + ")";
+        assert population.size() >= 2 : "Invalid initial Population, need to have at least two chromosomes (got " + population.size() + ")";
 
         start.set(System.nanoTime());
 
