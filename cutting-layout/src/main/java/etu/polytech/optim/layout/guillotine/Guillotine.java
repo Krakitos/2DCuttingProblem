@@ -25,7 +25,7 @@ public class Guillotine {
     private double height;
 
     private final RectChoiceHeuristic rectChoice;
-    private final SplitHeuristic split;
+    private final SplitHeuristic spliter;
 
     private List<Rectangle> freeRects;
 
@@ -35,7 +35,7 @@ public class Guillotine {
         this.height = height;
 
         this.rectChoice = rectChoice;
-        this.split = split;
+        this.spliter = split;
 
         this.freeRects = new LinkedList<>();
     }
@@ -71,13 +71,8 @@ public class Guillotine {
         return free;
     }
 
-    /**
-     * Add a waste to the wastemap
-     * @param width
-     * @param height
-     */
-    public void addWaste(final double x, final double y, final double width, final double height){
-        freeRects.add(new Rectangle(x, y, width, height));
+    public void addWaste(Rectangle r) {
+        freeRects.add(r);
     }
 
     /**
@@ -90,18 +85,12 @@ public class Guillotine {
         //Adding a rectangle will result of two new empties area
         Rectangle a,b;
 
-        if(split.split(free, placed) == SplitHeuristic.SplitDirection.HORIZONTAL){
+        SplitHeuristic.SplitDirection direction = spliter.split(free, placed);
 
-            if(LOGGER.isDebugEnabled())
-                LOGGER.debug("Splitting Horizontally");
-
+        if(direction == SplitHeuristic.SplitDirection.HORIZONTAL){
             a = new Rectangle(free.x(), free.y() + placed.height(), free.width(), free.height() - placed.height());
             b = new Rectangle(free.x() + placed.width(), free.y(), free.width() - placed.width(), placed.height());
         }else{
-
-            if(LOGGER.isDebugEnabled())
-                LOGGER.debug("Splitting Vertically");
-
             a = new Rectangle(free.x(), free.y() + placed.height(), placed.width(), free.height() - placed.height());
             b = new Rectangle(free.x() + placed.width(), free.y(), free.width() - placed.width(), free.height());
         }
@@ -129,7 +118,7 @@ public class Guillotine {
 
             for (int j = i + 1; j < freeRects.size(); ++j) {
                 Rectangle r2 = freeRects.get(j);
-                
+
                 if (r.width() == r2.width() && r.x() == r2.x()) {
                     if (r.y() == r2.y() + r2.height()) {
                         freeRects.add(new Rectangle(r.x(), r.y() - r2.height(), r.width(), r.height() + r2.height()));
@@ -169,8 +158,8 @@ public class Guillotine {
     public RectChoiceHeuristic rectChoiceHeuristic(){ return rectChoice; }
 
     /**
-     * Return the heuristic used to split rectangles
+     * Return the heuristic used to spliter rectangles
      * @return
      */
-    public SplitHeuristic splitHeuristic(){ return split; }
+    public SplitHeuristic splitHeuristic(){ return spliter; }
 }

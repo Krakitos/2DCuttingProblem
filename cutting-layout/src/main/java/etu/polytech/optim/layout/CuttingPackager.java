@@ -5,6 +5,7 @@ import etu.polytech.optim.layout.exceptions.LayoutException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Morgan on 08/04/2015.
@@ -16,5 +17,5 @@ public interface CuttingPackager {
      * @param generation
      * @throws LayoutException Thrown when no solution is found
      */
-    Collection<Collection<CuttingLayoutElement>> layout(@NotNull final int[] generation) throws LayoutException;
+    List<Collection<CuttingLayoutElement>> layout(@NotNull final int[] generation) throws LayoutException;
 }
