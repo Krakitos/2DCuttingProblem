@@ -49,18 +49,18 @@ public abstract class CuttingEngineObservable {
 
     /**
      * Notify about the progression of the generation
-     * @param iteration
+     * @param progress
      */
-    protected void fireGenerationProgress(final long iteration){
-        observers.forEach(o -> o.onGenerationProgress(iteration));
+    protected void fireGenerationProgress(final ProgressObservable progress){
+        observers.forEach(o -> o.onGenerationProgress(progress));
     }
 
     /**
      * Notify observers about the discovery of a better solution
-     * @param solution
+     * @param fitness
      */
-    protected void fireNewSolution(@NotNull final CuttingSolution solution){
-        observers.forEach(o -> o.onNewSolution(solution));
+    protected void fireNewSolution(final long iteration, final double fitness){
+        observers.forEach(o -> o.onNewSolution(iteration, fitness));
     }
 
     /**

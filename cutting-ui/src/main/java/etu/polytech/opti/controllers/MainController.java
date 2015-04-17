@@ -5,8 +5,19 @@ import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.api.observers.CuttingEngineObserver;
+import etu.polytech.optim.api.observers.ProgressObservable;
 import etu.polytech.optim.api.readers.ConfigurationReader;
 import etu.polytech.optim.api.readers.FileConfigurationReader;
+import etu.polytech.optim.cutting.GeneticCuttingRunner;
+import etu.polytech.optim.cutting.lang.stop.DurationStrategyObservable;
+import etu.polytech.optim.cutting.lang.stop.IterationStrategyObservable;
+import etu.polytech.optim.genetic.strategies.crossover.SinglePointCrossover;
+import etu.polytech.optim.genetic.strategies.mutation.RandomMutation;
+import etu.polytech.optim.genetic.utils.ChromosomePair;
+import etu.polytech.optim.layout.guillotine.GuillotinePackager;
+import etu.polytech.optim.layout.guillotine.choice.BestAreaFit;
+import etu.polytech.optim.layout.guillotine.split.MaximizeArea;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -30,6 +41,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * Created by Morgan on 11/03/2015.
@@ -52,6 +66,9 @@ public class MainController implements CuttingEngineObserver, Initializable {
     public TextField sheetPriceInput;
 
     /** Stop **/
+    private static final String DURATION_STOP = "Duration";
+    private static final String ITERATIONS_STOP = "Iterations";
+
     @FXML
     public ComboBox<String> stoppingChooser;
     @FXML
@@ -80,8 +97,12 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     /** Charts **/
     @FXML
-    public LineChart<Integer, Integer> generationStats;
-    private ObservableList<XYChart.Data<Integer, Integer>> series;
+    public LineChart<Long, Double> generationStats;
+    private ObservableList<XYChart.Data<Long, Double>> series;
+
+
+    private CuttingConfiguration configuration;
+    private AtomicInteger runCounter = new AtomicInteger(0);
 
     /**
      * Set the stage of this application
@@ -97,39 +118,84 @@ public class MainController implements CuttingEngineObserver, Initializable {
      */
     public void handleRun(ActionEvent actionEvent) {
         LOGGER.debug("Clicked Run");
-        validateInputs();
+        if(validateInputs()){
+            long stopValue = Long.parseLong(stoppingValueInput.getText());
+
+            GeneticCuttingRunner runner = new GeneticCuttingRunner.Builder()
+                    .setConfiguration(configuration)
+                    .setPackager(new GuillotinePackager(configuration, new BestAreaFit(), new MaximizeArea()))
+                    .setCrossoverPolicy(new SinglePointCrossover())
+                    .setMutationPolicy(new RandomMutation(4))
+                    .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
+                    .setStoppingCondition(
+                            stoppingChooser.selectionModelProperty().get().getSelectedItem().equals(ITERATIONS_STOP) ?
+                                    new IterationStrategyObservable(stopValue) : new DurationStrategyObservable(stopValue, TimeUnit.SECONDS))
+                    .build();
+
+            series = FXCollections.observableArrayList();
+            generationStats.getData().add(new XYChart.Series<>("Run #" + runCounter.incrementAndGet(), series));
+
+            runner.addObserver(this);
+
+            changeProgressVisibility(true);
+            new Thread(runner::start, "Genetic Algorithm Thread").start();
+        }
     }
 
-    private void validateInputs() {
+    private boolean validateInputs() {
         if(sheetPriceInput.getText().trim().length() == 0){
             sheetPriceInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("Sheet Price not defined");
+
+            return false;
         }else{
             sheetPriceInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
 
         if(sheetWidthInput.getText().trim().length() == 0){
             sheetWidthInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("Sheet Width not defined");
+
+            return false;
         }else{
             sheetWidthInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
 
         if(sheetHeightInput.getText().trim().length() == 0){
             sheetHeightInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("Sheet Height not defined");
+
+            return false;
         }else{
             sheetHeightInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
 
         if(piecesDisplayer.getItems().size() == 0){
             piecesDisplayer.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("No element are defined");
+
+            return false;
         }else{
             piecesDisplayer.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
 
         if(stoppingValueInput.getText().isEmpty()){
             stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("Stopping condition not defined");
+
+            return false;
         }else{
+            try{
+                Long.parseLong(stoppingValueInput.getText());
+            }catch (NumberFormatException e){
+                stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
+                LOGGER.warn("Stopping condition not a valid long {}", stoppingValueInput.getText());
+            }
+
             stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
         }
+
+        return true;
     }
 
     /**
@@ -142,37 +208,43 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        stoppingChooser.setItems(FXCollections.observableArrayList("Iterations", "Duration"));
+        generationProgressLabel.textProperty().bind(generationProgressIndicator.progressProperty().multiply(100).asString("%.2f").concat("%"));
+
+        stoppingChooser.setItems(FXCollections.observableArrayList(ITERATIONS_STOP, DURATION_STOP));
         stoppingChooser.setValue(stoppingChooser.itemsProperty().getValue().get(0));
 
         piecesDisplayer.setCellFactory(param -> new CuttingElementView());
-
- /*       series = FXCollections.observableArrayList();
-        generationStats.getData().add(new XYChart.Series<>("Cutting", series));
-
-        for (int i = 0; i < 100; i++) {
-            series.add(new XYChart.Data<>(i * 100, (int)(Math.random() * 7000)));
-        }*/
     }
 
     @Override
-    public void onNewSolution(@NotNull CuttingSolution solution) {
-
+    public void onNewSolution(long iteration, @NotNull double fitness) {
+        Platform.runLater(() -> {
+            series.add(new XYChart.Data<>(iteration, fitness));
+        });
     }
 
     @Override
     public void onGenerationStarted() {
-        changeProgressVisibility(true);
+        Platform.runLater(() -> {
+            changeProgressVisibility(true);
+            generationStats.setVisible(true);
+        });
     }
 
     @Override
-    public void onGenerationProgress(long iteration) {
-
+    public void onGenerationProgress(final ProgressObservable observable) {
+        Platform.runLater(() -> generationProgressIndicator.setProgress(observable.progression()));
     }
 
     @Override
     public void onGenerationFinished(@NotNull CuttingSolution bestSolution) {
-        changeProgressVisibility(false);
+        Platform.runLater(() -> {
+            generationProgressIndicator.setProgress(1d);
+            changeProgressVisibility(false);
+            displaySolution(bestSolution);
+
+            //TODO : Supprimer l'observateur
+        });
     }
 
     @FXML
@@ -195,14 +267,19 @@ public class MainController implements CuttingEngineObserver, Initializable {
         });
     }
 
+    private void displaySolution(CuttingSolution bestSolution) {
+
+    }
+
     /**
      * Change the visibility of the progress indicator
      */
     private void changeProgressVisibility(final boolean visible){
         if(visible){
-
+            generationProgressIndicator.setProgress(0.0);
+            generationProgressContainer.setVisible(true);
         }else{
-
+            generationProgressContainer.setVisible(false);
         }
     }
 
@@ -219,6 +296,8 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
         piecesDisplayer.getItems().clear();
         config.elements().forEach(piecesDisplayer.getItems()::add);
+
+        configuration = config;
     }
 
     /**
