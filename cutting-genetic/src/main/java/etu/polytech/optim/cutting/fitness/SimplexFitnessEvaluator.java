@@ -1,6 +1,7 @@
 package etu.polytech.optim.cutting.fitness;
 
 import etu.polytech.optim.api.lang.CuttingConfiguration;
+import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
@@ -22,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import static java.util.stream.Collectors.counting;
 
 /**
  * Created by Morgan on 08/04/2015.
@@ -139,19 +138,17 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
         if(LOGGER.isTraceEnabled())
             LOGGER.trace(SIMPLEX_CONSTRAINTS_MARKER, "Computing Simplex Constraints");
 
-        final int piecesNb = configuration.elements().size();
-        final Collection<LinearConstraint> constraintList = new ArrayList<>(layout.size());
+        final Collection<LinearConstraint> constraintList = new ArrayList<>(configuration.elements().size());
 
-        configuration.elements().forEach(element -> {
-            //Nombre de fois ou la piece i apparait dans le pattern j
+        for (CuttingElement element : configuration.elements()) {
             double[] coeffs = new double[layout.size()];
 
-            Arrays.setAll(coeffs, index -> {
-                return layout.get(index).parallelStream().filter(e -> e.element() == element).collect(counting()).doubleValue();
+            Arrays.setAll(coeffs, value -> {
+                return layout.get(value).parallelStream().filter(e -> e.element().id() == element.id()).count();
             });
 
             constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, element.asking()));
-        });
+        }
 
         if(LOGGER.isDebugEnabled())
             LOGGER.debug(SIMPLEX_CONSTRAINTS_MARKER, "Computed {} constraints for {} pieces", constraintList.size(), configuration.elements().size());
