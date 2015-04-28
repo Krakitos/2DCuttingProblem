@@ -85,6 +85,7 @@ public class MaxRectPackager extends AbstractCuttingPackager {
                 }
             }
 
+            //Add a new pattern, and retry
             if(bestNode == null) {
                 if(LOGGER.isDebugEnabled())
                     LOGGER.debug("Adding new bin (occupancy : " + occupancy() * 100.0d + "% )");
@@ -93,16 +94,11 @@ public class MaxRectPackager extends AbstractCuttingPackager {
                 freeRectangles.add(new Rectangle(0, 0, binWidth(), binHeight()));
 
                 patterns.add(usedRectangles);
-                usedRectangles.clear();
-
-                continue;
+                usedRectangles = new ArrayList<>();
+            }else {
+                placeRect(bestNode);
+                remaining.remove(bestScoreIndex);
             }
-
-            if(bestScoreIndex == -1)
-                return null;
-
-            placeRect(bestNode);
-            remaining.remove(bestScoreIndex);
         }
 
         return pack(patterns);
