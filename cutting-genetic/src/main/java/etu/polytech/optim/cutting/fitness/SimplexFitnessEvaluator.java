@@ -34,15 +34,13 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
     private static final Marker SIMPLEX_OBJ_FUNC_MARKER = MarkerManager.getMarker("[SIMPLEX_FUNC_OBJ]");
     private static final Marker SIMPLEX_CONSTRAINTS_MARKER = MarkerManager.getMarker("[SIMPLEX_CONSTRAINTS]");
 
-    private final CuttingConfiguration configuration;
+    private static final Double INVALID_FITNESS = Double.MAX_VALUE;
 
-    private final SimplexSolver simplex;
+    private final CuttingConfiguration configuration;
 
     private final CuttingPackager packager;
 
     public SimplexFitnessEvaluator(@NotNull final CuttingConfiguration configuration, @NotNull final CuttingPackager packager) {
-        simplex = new SimplexSolver();
-
         this.configuration = configuration;
         this.packager = packager;
     }
@@ -92,7 +90,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
 
         double fitness = -1;
         try {
-            final PointValuePair optimal = simplex.optimize(objectiveFunction, constraints, GoalType.MINIMIZE, new NonNegativeConstraint(true));
+            final PointValuePair optimal = new SimplexSolver().optimize(objectiveFunction, constraints, GoalType.MINIMIZE, new NonNegativeConstraint(true));
 
             double[] optimalPoint = optimal.getPoint();
 
@@ -106,7 +104,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
             return new CuttingSolution(optimal.getPoint(), layout, fitness);
         }catch (NoFeasibleSolutionException e){
             LOGGER.warn(e);
-            return new CuttingSolution(null, layout, fitness);
+            return new CuttingSolution(null, layout, INVALID_FITNESS);
         }
 
     }
@@ -143,12 +141,20 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
         for (CuttingElement element : configuration.elements()) {
             double[] coeffs = new double[layout.size()];
 
-            Arrays.setAll(coeffs, value -> {
-                return layout.get(value).parallelStream().filter(e -> e.element().id() == element.id()).count();
-            });
+            for (int i = 0; i < layout.size(); i++) {
+                Collection<CuttingLayoutElement> pattern = layout.get(i);
+
+                coeffs[i] = pattern.parallelStream().filter(e -> e.element().id() == element.id()).count();
+            }
+
+            assert Arrays.stream(coeffs).sum() > 0.0d : "No pattern have the element " + element.id();
 
             constraintList.add(new LinearConstraint(coeffs, Relationship.GEQ, element.asking()));
         }
+
+        assert constraintList.size() == configuration.elements().size() : "Invalid constraints set size "
+                + constraintList.size() + " / " + configuration.elements().size();
+
 
         if(LOGGER.isDebugEnabled())
             LOGGER.debug(SIMPLEX_CONSTRAINTS_MARKER, "Computed {} constraints for {} pieces", constraintList.size(), configuration.elements().size());
