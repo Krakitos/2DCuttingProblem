@@ -86,7 +86,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
         final int patternCost = configuration.sheet().price() * layout.size();
 
         final LinearConstraintSet constraints = computeConstraints(layout);
-        final LinearObjectiveFunction objectiveFunction = computeObjFunction(layout, patternCost);
+        final LinearObjectiveFunction objectiveFunction = computeObjFunction(layout);
 
         double fitness = -1;
         try {
@@ -98,10 +98,13 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
                 LOGGER.debug(SIMPLEX_MARKER, "Simplex done, best fit is {}", Arrays.toString(optimalPoint));
 
             for (double v : optimalPoint) {
-                fitness += Math.ceil(v);
+                if(v > 0.0d) {
+                    fitness += Math.ceil(v);
+                    fitness += configuration.sheet().price();
+                }
             }
 
-            return new CuttingSolution(optimal.getPoint(), layout, fitness);
+            return new CuttingSolution(optimal.getPoint(), layout, fitness );
         }catch (NoFeasibleSolutionException e){
             LOGGER.warn(e);
             return new CuttingSolution(null, layout, INVALID_FITNESS);
@@ -114,7 +117,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param layout
      * @return
      */
-    private LinearObjectiveFunction computeObjFunction(Collection<Collection<CuttingLayoutElement>> layout, int patternsCost) {
+    private LinearObjectiveFunction computeObjFunction(Collection<Collection<CuttingLayoutElement>> layout) {
         if(LOGGER.isTraceEnabled())
             LOGGER.trace(SIMPLEX_OBJ_FUNC_MARKER, "Computing objective function");
 
@@ -122,9 +125,9 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
         Arrays.fill(coeffs, 1d);
 
         if(LOGGER.isDebugEnabled())
-            LOGGER.debug(SIMPLEX_OBJ_FUNC_MARKER, "Computed objective function coefs {} + {}", Arrays.toString(coeffs), patternsCost);
+            LOGGER.debug(SIMPLEX_OBJ_FUNC_MARKER, "Computed objective function coefs {}", Arrays.toString(coeffs));
 
-        return new LinearObjectiveFunction(coeffs, patternsCost);
+        return new LinearObjectiveFunction(coeffs, 0);
     }
 
     /**
