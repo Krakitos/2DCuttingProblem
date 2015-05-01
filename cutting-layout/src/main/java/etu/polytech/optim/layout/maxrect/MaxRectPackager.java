@@ -12,10 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.omg.CORBA.DoubleHolder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Morgan on 27/04/2015.
@@ -54,13 +51,12 @@ public class MaxRectPackager extends AbstractCuttingPackager {
             }
         }
 
+        assert Arrays.stream(generation).sum() == remaining.size() : "Not the same number of generated element in remaining";
+
         //Shuffle the list
         Collections.shuffle(remaining);
 
-
-        while (remaining.size() > 0){
-
-            CuttingElement element = remaining.get(0);
+        while (!remaining.isEmpty()){
 
             //Using Native Type Object representation to use as reference and not value as usual with native types
             DoubleHolder bestScore1 = new DoubleHolder(Double.MAX_VALUE);
@@ -71,11 +67,13 @@ public class MaxRectPackager extends AbstractCuttingPackager {
 
             for (int i = 0; i < remaining.size(); i++) {
 
+                CuttingElement current = remaining.get(i);
+
                 //Same as previously
                 DoubleHolder score1 = new DoubleHolder(Double.MAX_VALUE);
                 DoubleHolder score2 = new DoubleHolder(Double.MAX_VALUE);
 
-                Rectangle newNode =  choiceHeuristic.select(freeRectangles, remaining.get(i).width(), remaining.get(i).height(), score1, score2);
+                Rectangle newNode =  choiceHeuristic.select(freeRectangles, current.width(), current.height(), score1, score2);
 
                 if(score1.value < bestScore1.value || (score1 == bestScore1 && score2.value < bestScore2.value)){
                     bestScore1 = score1;
@@ -88,7 +86,7 @@ public class MaxRectPackager extends AbstractCuttingPackager {
             //Add a new pattern, and retry
             if(bestNode == null) {
                 if(LOGGER.isDebugEnabled())
-                    LOGGER.debug("Adding new bin (occupancy : " + occupancy() * 100.0d + "% )");
+                    LOGGER.debug("Adding new bin (occupancy : " + String.format("%.2f", occupancy() * 100.0d) + "% )");
 
                 freeRectangles.clear();
                 freeRectangles.add(new Rectangle(0, 0, binWidth(), binHeight()));
@@ -96,10 +94,23 @@ public class MaxRectPackager extends AbstractCuttingPackager {
                 patterns.add(usedRectangles);
                 usedRectangles = new ArrayList<>();
             }else {
+                int old = usedRectangles.size();
+
                 placeRect(bestNode);
+
+                assert usedRectangles.size() == old + 1 : "placeRect didn't add the element";
+
                 remaining.remove(bestScoreIndex);
             }
+
+            assert remaining.size() + patterns.stream().mapToInt(List::size).sum() + usedRectangles.size() == Arrays.stream(generation).sum() : "An element has been skip";
         }
+
+        if(!patterns.contains(usedRectangles) && usedRectangles.size() > 0)
+            patterns.add(usedRectangles);
+
+        assert Arrays.stream(generation).sum() == patterns.parallelStream().mapToInt(List::size).sum():
+                "Not the same number of elements : " + Arrays.stream(generation).sum() + "/" + patterns.parallelStream().mapToInt(List::size).sum();
 
         return pack(patterns);
     }
