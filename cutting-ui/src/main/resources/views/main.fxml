@@ -136,18 +136,16 @@
         </VBox>
     </left>
     <center>
-        <VBox fillWidth="true" alignment="CENTER">
-            <VBox fillWidth="true" fx:id="solutionRoot" VBox.vgrow="ALWAYS">
-                <LineChart fx:id="generationStats" title="Generation visualisation" visible="false" prefHeight="250">
-                    <xAxis>
-                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100" autoRanging="true"/>
-                    </xAxis>
-                    <yAxis>
-                        <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
-                    </yAxis>
-                </LineChart>
-                <GridPane fx:id="solutionDisplayer" />
-            </VBox>
+        <VBox fillWidth="true" alignment="CENTER" fx:id="solutionRoot" VBox.vgrow="ALWAYS" spacing="20">
+            <LineChart fx:id="generationStats" title="Generation visualisation" visible="false" prefHeight="250">
+                <xAxis>
+                    <NumberAxis label="Iterations" lowerBound="0" tickUnit="100" autoRanging="true"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
+                </yAxis>
+            </LineChart>
+            <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
             <StackPane fx:id="generationProgressContainer" visible="false">
                 <ProgressBar fx:id="generationProgressIndicator" progress="1" visible="true" prefWidth="1.7976931348623157e308"/>
                 <Text fx:id="generationProgressLabel" text="100%"/>

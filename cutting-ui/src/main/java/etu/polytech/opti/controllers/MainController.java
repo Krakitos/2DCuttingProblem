@@ -1,6 +1,7 @@
 package etu.polytech.opti.controllers;
 
 import etu.polytech.opti.components.CuttingElementView;
+import etu.polytech.opti.components.CuttingSolutionDisplayer;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
@@ -14,9 +15,8 @@ import etu.polytech.optim.cutting.lang.stop.IterationStrategyObservable;
 import etu.polytech.optim.genetic.strategies.crossover.SinglePointCrossover;
 import etu.polytech.optim.genetic.strategies.mutation.RandomMutation;
 import etu.polytech.optim.genetic.utils.ChromosomePair;
-import etu.polytech.optim.layout.guillotine.GuillotinePackager;
-import etu.polytech.optim.layout.guillotine.choice.BestAreaFit;
-import etu.polytech.optim.layout.guillotine.split.MaximizeArea;
+import etu.polytech.optim.layout.maxrect.MaxRectPackager;
+import etu.polytech.optim.layout.maxrect.choice.BestShortSideFit;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,6 +29,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -93,14 +94,17 @@ public class MainController implements CuttingEngineObserver, Initializable {
     public Text generationProgressLabel;
 
     @FXML
+    private VBox solutionRoot;
+
+    @FXML
     public GridPane solutionDisplayer;
 
     /** Charts **/
     @FXML
     public LineChart<Long, Double> generationStats;
+
+
     private ObservableList<XYChart.Data<Long, Double>> series;
-
-
     private CuttingConfiguration configuration;
     private AtomicInteger runCounter = new AtomicInteger(0);
 
@@ -118,12 +122,13 @@ public class MainController implements CuttingEngineObserver, Initializable {
      */
     public void handleRun(ActionEvent actionEvent) {
         LOGGER.debug("Clicked Run");
+
         if(validateInputs()){
             long stopValue = Long.parseLong(stoppingValueInput.getText());
 
             GeneticCuttingRunner runner = new GeneticCuttingRunner.Builder()
                     .setConfiguration(configuration)
-                    .setPackager(new GuillotinePackager(configuration, new BestAreaFit(), new MaximizeArea()))
+                    .setPackager(new MaxRectPackager(configuration, new BestShortSideFit()))
                     .setCrossoverPolicy(new SinglePointCrossover())
                     .setMutationPolicy(new RandomMutation(4))
                     .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
@@ -203,7 +208,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
      * @param actionEvent
      */
     public void handleAddPiece(ActionEvent actionEvent) {
-        System.out.println("Not implemented yet.");
+        showError("Not implemented yet.");
     }
 
     @Override
@@ -214,13 +219,14 @@ public class MainController implements CuttingEngineObserver, Initializable {
         stoppingChooser.setValue(stoppingChooser.itemsProperty().getValue().get(0));
 
         piecesDisplayer.setCellFactory(param -> new CuttingElementView());
+
+        solutionDisplayer.prefWidthProperty().bind(solutionRoot.widthProperty());
+        solutionDisplayer.prefHeightProperty().bind(solutionRoot.heightProperty().subtract(generationStats.heightProperty()));
     }
 
     @Override
     public void onNewSolution(long iteration, @NotNull double fitness) {
-        Platform.runLater(() -> {
-            series.add(new XYChart.Data<>(iteration, fitness));
-        });
+        Platform.runLater(() -> series.add(new XYChart.Data<>(iteration, fitness)));
     }
 
     @Override
@@ -268,7 +274,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
     }
 
     private void displaySolution(CuttingSolution bestSolution) {
-
+        new CuttingSolutionDisplayer(solutionDisplayer).render(configuration, bestSolution);
     }
 
     /**
@@ -306,6 +312,8 @@ public class MainController implements CuttingEngineObserver, Initializable {
      */
     private void showError(final String error) {
         Alert alert = new Alert(Alert.AlertType.ERROR, error, ButtonType.OK);
+        alert.setTitle("Woops ");
+        alert.setHeaderText("Something went wrong ...");
         alert.showAndWait();
     }
 }
