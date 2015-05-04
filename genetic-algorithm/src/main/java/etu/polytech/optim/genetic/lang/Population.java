@@ -4,10 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by Morgan on 07/04/2015.
@@ -35,20 +32,40 @@ public class Population {
      * @param chromosome
      */
     public void addChromosome(@NotNull final Chromosome chromosome){
-        if(chromosomes.parallelStream().filter(second -> chromosome.equals(second)).count() == 0) {
+
+        Optional<Chromosome> c = chromosomes.parallelStream().filter(chromosome::equals).max((Comparator.comparingDouble(Chromosome::fitness)));
+        if(c.isPresent()){
+            if(c.get().fitness() > chromosome.fitness()){
+                chromosomes.remove(c.get());
+
+                if(LOGGER.isDebugEnabled())
+                    LOGGER.debug("Chromosome {} already present in the population fitness {} > {}, replace the old one",
+                            chromosome, c.get().fitness(), chromosome.fitness());
+            }else{
+                return;
+            }
+        }
+
+
+        if (chromosomes.size() == maxSize) {
+            Collections.sort(chromosomes);
+            Chromosome worst = chromosomes.remove(chromosomes.size() - 1);
+
+            LOGGER.debug("Evictiong of chromosome {} with fitness {}", worst, worst.fitness());
+        }
+
+        chromosomes.add(chromosome);
+
+
+
+        if(chromosomes.parallelStream().filter(chromosome::equals).count() == 0) {
 
             LOGGER.info("Adding chromosome {} to the population ({} / {})", chromosome, chromosomes.size(), maxSize);
 
-            if (chromosomes.size() == maxSize) {
-                Collections.sort(chromosomes);
-                Chromosome worst = chromosomes.remove(chromosomes.size() - 1);
 
-                LOGGER.debug("Evictiong of chromosome {} with fitness {}", worst, worst.fitness());
-            }
-
-            chromosomes.add(chromosome);
         }else{
-            LOGGER.debug("Chromosome {} already present in the population, skipping add to the list", chromosome);
+
+
         }
     }
 

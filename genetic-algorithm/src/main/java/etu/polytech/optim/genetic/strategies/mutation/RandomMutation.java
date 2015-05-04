@@ -29,6 +29,8 @@ public class RandomMutation implements MutationPolicy {
                 c[i] = 1 + RANDOM.nextInt(maxGeneValue);
             else
                 c[i] = chromosome.genomeAt(i);
+
+            assert c[i] != 0;
         }
 
         return new FixedSizeChromosome(c);

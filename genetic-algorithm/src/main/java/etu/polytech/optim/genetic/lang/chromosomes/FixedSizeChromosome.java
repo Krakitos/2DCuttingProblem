@@ -22,6 +22,11 @@ public class FixedSizeChromosome implements Chromosome {
     public FixedSizeChromosome(final int[] representation, double fitness) {
         this.representation = representation;
         this.fitness = fitness;
+
+
+        for (int v : representation) {
+            assert v != 0;
+        }
     }
 
     @Override
