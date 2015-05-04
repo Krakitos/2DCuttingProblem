@@ -44,8 +44,8 @@ public class CuttingPatternView extends Pane {
             Label l = new Label(String.valueOf(e.element().id()));
             l.layoutXProperty().bind(scaleX.multiply(e.x()));
             l.layoutYProperty().bind(scaleY.multiply(e.y()));
-            l.prefWidthProperty().bind(scaleX.multiply(e.width()));
-            l.prefHeightProperty().bind(scaleY.multiply(e.height()));
+            l.prefWidthProperty().bind(scaleX.multiply(e.isRotate() ? e.height() : e.width()));
+            l.prefHeightProperty().bind(scaleY.multiply(e.isRotate() ? e.width() : e.height()));
             l.setStyle("-fx-background-color: " + c.toString().replace("0x", "#") + "; "
                     + " -fx-border-radius: 2px; -fx-border-color: black");
             l.textAlignmentProperty().set(TextAlignment.CENTER);
