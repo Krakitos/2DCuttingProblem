@@ -14,7 +14,7 @@ public interface MutationPolicy {
      * Number between 0.0 and 1.0 representing the probability of a chromosome to mutate
      * @return
      */
-    default double mutatationRate(){
+    default double mutationRate(){
         return DEFAULT_MUTATION_RATE;
     }
 

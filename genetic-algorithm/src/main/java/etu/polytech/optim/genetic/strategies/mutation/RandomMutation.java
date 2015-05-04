@@ -5,6 +5,7 @@ import etu.polytech.optim.genetic.lang.chromosomes.FixedSizeChromosome;
 import etu.polytech.optim.genetic.strategies.MutationPolicy;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -24,13 +25,15 @@ public class RandomMutation implements MutationPolicy {
         int index = RANDOM.nextInt(chromosome.length());
         int[] c = new int[chromosome.length()];
 
-        for (int i = 0; i < chromosome.length(); i++) {
+        Arrays.setAll(c, i -> {
             if(i == index)
-                c[i] = 1 + RANDOM.nextInt(maxGeneValue);
+                return 1 + RANDOM.nextInt(maxGeneValue);
             else
-                c[i] = chromosome.genomeAt(i);
+                return chromosome.genomeAt(i);
+        });
 
-            assert c[i] != 0;
+        for (int i = 0; i < chromosome.length(); i++) {
+
         }
 
         return new FixedSizeChromosome(c);
