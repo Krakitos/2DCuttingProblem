@@ -17,7 +17,8 @@ public class Population {
 
     private final Random RANDOM = new Random();
 
-    private final List<Chromosome> chromosomes;
+    //private final List<Chromosome> chromosomes;
+    private final SortedSet<Chromosome> chromosomes;
     private final int maxSize;
 
     private Map<String, AtomicLong> hitCounter;
@@ -26,7 +27,8 @@ public class Population {
         LOGGER.info("Population fixed to {}", maxSize);
 
         this.maxSize = maxSize;
-        chromosomes = new ArrayList<>(maxSize);
+        //chromosomes = new ArrayList<>(maxSize);
+        chromosomes = new TreeSet<>((o1, o2) -> o1.equals(o2) ? 0 : o1.fitness() < o2.fitness() ? -1 : 1);
 
         hitCounter = new HashMap<>();
     }
@@ -38,7 +40,7 @@ public class Population {
      * @param chromosome
      */
     public void addChromosome(@NotNull final Chromosome chromosome){
-        Optional<Chromosome> c = chromosomes.parallelStream().filter(chromosome::equals).max((Comparator.comparingDouble(Chromosome::fitness)));
+        /*Optional<Chromosome> c = chromosomes.parallelStream().filter(chromosome::equals).max((Comparator.comparingDouble(Chromosome::fitness)));
         if(c.isPresent()){
             if(c.get().fitness() > chromosome.fitness()){
                 chromosomes.remove(c.get());
@@ -51,18 +53,24 @@ public class Population {
             }
         }else{
             hitCounter.put(chromosome.toString(), new AtomicLong(0l));
-        }
+        }*/
+
+        chromosomes.removeIf(c -> c.equals(chromosome) && c.fitness() > chromosome.fitness());
 
 
         if (chromosomes.size() == maxSize) {
-            Collections.sort(chromosomes);
-            Chromosome worst = chromosomes.remove(chromosomes.size() - 1);
+            //Collections.sort(chromosomes);
+            Chromosome worst = chromosomes.last();
+            chromosomes.remove(worst);
 
-            LOGGER.debug("Evictiong of chromosome {} with fitness {}", worst, worst.fitness());
+            LOGGER.debug("Eviction of chromosome {} with fitness {}", worst, worst.fitness());
         }
 
-        //Add to the hit counter to see frequencies of values hit
-        hitCounter.get(chromosome.toString()).incrementAndGet();
+        String id = chromosome.toString();
+        if(!hitCounter.containsKey(id))
+            hitCounter.put(id, new AtomicLong(1l));
+        else
+            hitCounter.get(id).incrementAndGet(); //Add to the hit counter to see frequencies of values hit
 
         chromosomes.add(chromosome);
     }
@@ -72,7 +80,18 @@ public class Population {
      * @return
      */
     public Chromosome getRandom(){
-        return chromosomes.get(RANDOM.nextInt(chromosomes.size()));
+        //return chromosomes.get(RANDOM.nextInt(chromosomes.size()));
+
+        int index = Math.max(0, RANDOM.nextInt(chromosomes.size()) - 1);
+        int i = 0;
+
+        Iterator<Chromosome> it = chromosomes.iterator();
+
+        while (++i < index - 1) {
+            it.next();
+        }
+
+        return it.next();
     }
 
     /**
@@ -88,8 +107,9 @@ public class Population {
      * @return
      */
     public @NotNull Chromosome fittestChromosome() {
-        Collections.sort(chromosomes);
-        return chromosomes.get(0);
+        //Collections.sort(chromosomes);
+        //return chromosomes.get(0);
+        return chromosomes.first();
     }
 
     /**
