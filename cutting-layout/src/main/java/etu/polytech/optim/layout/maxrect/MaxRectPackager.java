@@ -12,7 +12,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.omg.CORBA.DoubleHolder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Morgan on 27/04/2015.
@@ -36,7 +39,7 @@ public class MaxRectPackager extends AbstractCuttingPackager {
     public List<Collection<CuttingLayoutElement>> layout(@NotNull int[] generation) throws LayoutException {
         List<List<Rectangle>> patterns = new ArrayList<>();
 
-        List<CuttingElement> remaining = new ArrayList<>();
+        List<CuttingElement> remaining = init(generation, true);
 
         usedRectangles = new ArrayList<>();
         freeRectangles = new ArrayList<>();
@@ -44,17 +47,6 @@ public class MaxRectPackager extends AbstractCuttingPackager {
         //Add a free rectangle which is of the size of the pattern sheet
         freeRectangles.add(new Rectangle(0, 0, binWidth(), binHeight()));
 
-
-        for (CuttingElement element : configuration.elements()) {
-            for (int i = 0; i < generation[element.id()]; i++) {
-                remaining.add(element);
-            }
-        }
-
-        assert Arrays.stream(generation).sum() == remaining.size() : "Not the same number of generated element in remaining";
-
-        //Shuffle the list
-        Collections.shuffle(remaining);
 
         while (!remaining.isEmpty()){
 
@@ -152,40 +144,47 @@ public class MaxRectPackager extends AbstractCuttingPackager {
      * @return
      */
     private boolean splitFreeNode(Rectangle freeNode, Rectangle usedNode){
-        if (usedNode.x() >= freeNode.x() + freeNode.width() || usedNode.x() + usedNode.width() <= freeNode.x() ||
-                usedNode.y() >= freeNode.y() + freeNode.height() || usedNode.y() + usedNode.height() <= freeNode.y())
+        // Test with SAT if the rectangles even intersect.
+        if (usedNode.x >= freeNode.x + freeNode.width || usedNode.x + usedNode.width <= freeNode.x ||
+                usedNode.y >= freeNode.y + freeNode.height || usedNode.y + usedNode.height <= freeNode.y)
             return false;
 
-        if (usedNode.x() < freeNode.x() + freeNode.width() && usedNode.x() + usedNode.width() > freeNode.x())
+        if (usedNode.x < freeNode.x + freeNode.width && usedNode.x + usedNode.width > freeNode.x)
         {
             // New node at the top side of the used node.
-            if (usedNode.y() > freeNode.y() && usedNode.y() < freeNode.y() + freeNode.height())
+            if (usedNode.y > freeNode.y && usedNode.y < freeNode.y + freeNode.height)
             {
-                Rectangle newNode = new Rectangle(freeNode.x(), freeNode.y(), freeNode.width(), usedNode.y() - freeNode.y());
+                Rectangle newNode = freeNode.clone();
+                newNode.height = usedNode.y - newNode.y;
                 freeRectangles.add(newNode);
             }
 
             // New node at the bottom side of the used node.
-            if (usedNode.y() + usedNode.height() < freeNode.y() + freeNode.height())
+            if (usedNode.y + usedNode.height < freeNode.y + freeNode.height)
             {
-                Rectangle newNode = new Rectangle(freeNode.x(), usedNode.y() + usedNode.height(), usedNode.width(), freeNode.y() + freeNode.height() - (usedNode.y() + usedNode.height()));
+                Rectangle newNode = freeNode.clone();
+                newNode.y = usedNode.y + usedNode.height;
+                newNode.height = freeNode.y + freeNode.height - (usedNode.y + usedNode.height);
                 freeRectangles.add(newNode);
             }
         }
 
-        if (usedNode.y() < freeNode.y() + freeNode.height() && usedNode.y() + usedNode.height() > freeNode.y())
+        if (usedNode.y < freeNode.y + freeNode.height && usedNode.y + usedNode.height > freeNode.y)
         {
             // New node at the left side of the used node.
-            if (usedNode.x() > freeNode.x() && usedNode.x() < freeNode.x() + freeNode.width())
+            if (usedNode.x > freeNode.x && usedNode.x < freeNode.x + freeNode.width)
             {
-                Rectangle newNode = new Rectangle(freeNode.x(), freeNode.y(), usedNode.x() - freeNode.x(), freeNode.height());
+                Rectangle newNode = freeNode.clone();
+                newNode.width = usedNode.x - newNode.x;
                 freeRectangles.add(newNode);
             }
 
             // New node at the right side of the used node.
-            if (usedNode.x() + usedNode.width() < freeNode.x() + freeNode.width())
+            if (usedNode.x + usedNode.width < freeNode.x + freeNode.width)
             {
-                Rectangle newNode = new Rectangle(usedNode.x() + usedNode.width(), freeNode.y(), freeNode.x() + freeNode.width() - (usedNode.x() + usedNode.width()), freeNode.height());
+                Rectangle newNode = freeNode.clone();
+                newNode.x = usedNode.x + usedNode.width;
+                newNode.width = freeNode.x + freeNode.width - (usedNode.x + usedNode.width);
                 freeRectangles.add(newNode);
             }
         }
