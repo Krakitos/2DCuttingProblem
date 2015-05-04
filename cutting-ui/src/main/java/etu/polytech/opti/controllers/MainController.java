@@ -102,9 +102,8 @@ public class MainController implements CuttingEngineObserver, Initializable {
     /** Charts **/
     @FXML
     public LineChart<Long, Double> generationStats;
-
-
     private ObservableList<XYChart.Data<Long, Double>> series;
+    
     private CuttingConfiguration configuration;
     private AtomicInteger runCounter = new AtomicInteger(0);
 
@@ -274,6 +273,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
     }
 
     private void displaySolution(CuttingSolution bestSolution) {
+        solutionDisplayer.getChildren().clear();
         new CuttingSolutionDisplayer(solutionDisplayer).render(configuration, bestSolution);
     }
 
