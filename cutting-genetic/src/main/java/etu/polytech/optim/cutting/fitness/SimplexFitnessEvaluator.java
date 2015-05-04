@@ -7,6 +7,7 @@ import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
 import etu.polytech.optim.genetic.fitness.FitnessEvaluator;
 import etu.polytech.optim.genetic.lang.Chromosome;
+import etu.polytech.optim.genetic.lang.chromosomes.FixedSizeChromosome;
 import etu.polytech.optim.layout.CuttingPackager;
 import etu.polytech.optim.layout.exceptions.LayoutException;
 import org.apache.commons.math3.optim.PointValuePair;
@@ -62,11 +63,10 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
                 LOGGER.trace("Trying to layout {}", repToString);
 
             List<Collection<CuttingLayoutElement>> layout = packager.layout(rep);
-            final CuttingSolution cuttingSolution = doSimplex(layout);
-            solution = new GeneticSolution(cuttingSolution);
+            solution = doSimplex(layout);
 
             if(LOGGER.isDebugEnabled())
-                LOGGER.debug("Computed fitness for Chromosome {} is {}", repToString, cuttingSolution.fitness());
+                LOGGER.debug("Computed fitness for Chromosome {} is {}", repToString, solution.fitness());
 
         } catch (LayoutException e) {
             if(LOGGER.isTraceEnabled())
@@ -81,7 +81,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @param layout
      * @return
      */
-    private CuttingSolution doSimplex(final List<Collection<CuttingLayoutElement>> layout) {
+    private GeneticSolution doSimplex(final List<Collection<CuttingLayoutElement>> layout) {
 
         final int patternCost = configuration.sheet().price() * layout.size();
 
@@ -97,17 +97,25 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug(SIMPLEX_MARKER, "Simplex done, best fit is {}", Arrays.toString(optimalPoint));
 
-            for (double v : optimalPoint) {
-                if(v > 0.0d) {
-                    fitness += Math.ceil(v);
+
+            //Represent the chromosome of the solution
+            int[] rep = new int[configuration.elements().size()];
+
+            for (int i = 0; i < optimalPoint.length; i++) {
+                if(optimalPoint[i] >= 0.0d){
+                    fitness += Math.ceil(optimalPoint[i]);
                     fitness += configuration.sheet().price();
+
+                    for (CuttingLayoutElement element : layout.get(i)) {
+                        ++rep[element.element().id()];
+                    }
                 }
             }
 
-            return new CuttingSolution(optimal.getPoint(), layout, fitness );
+            return new GeneticSolution(new CuttingSolution(optimal.getPoint(), layout, fitness), new FixedSizeChromosome(rep));
         }catch (NoFeasibleSolutionException e){
             LOGGER.warn(e);
-            return new CuttingSolution(null, layout, INVALID_FITNESS);
+            return new GeneticSolution(new CuttingSolution(null, layout, INVALID_FITNESS));
         }
 
     }
