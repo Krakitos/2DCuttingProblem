@@ -5,9 +5,7 @@ import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.layout.lang.Rectangle;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Morgan on 08/04/2015.
@@ -28,7 +26,7 @@ public abstract class AbstractCuttingPackager implements CuttingPackager {
                 boolean found = false;
                 for (CuttingElement element : configuration.elements()) {
                     if((element.width() == r.width() && element.height() == r.height()) || (element.height() == r.width() && element.width() == r.height())) {
-                        elements.add(new CuttingLayoutElement(r.x(), r.y(), element.width() == r.width(), element));
+                        elements.add(new CuttingLayoutElement(r.x(), r.y(), element.width() != r.width(), element));
                         found = true;
                         break;
                     }
@@ -43,6 +41,31 @@ public abstract class AbstractCuttingPackager implements CuttingPackager {
         }
 
         return patterns;
+    }
+
+    /**
+     *
+     * @param generation
+     * @return
+     */
+    protected List<CuttingElement> init(int[] generation, boolean shuffle) {
+        final int sum = Arrays.stream(generation).sum();
+
+        List<CuttingElement> remaining = new ArrayList<>(sum);
+
+        for (CuttingElement element : configuration.elements()) {
+            for (int i = 0; i < generation[element.id()]; i++) {
+                remaining.add(element);
+            }
+        }
+
+        assert sum == remaining.size() : "Not the same number of generated element in remaining";
+
+        //Shuffle the list
+        if(shuffle)
+            Collections.shuffle(remaining);
+
+        return remaining;
     }
 
     /**
