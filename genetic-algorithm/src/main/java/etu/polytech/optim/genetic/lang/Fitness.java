@@ -12,4 +12,13 @@ public interface Fitness {
      * @return
      */
     double fitness();
+
+    /**
+     * Use this property if you want to backtrack a solution into the population.
+     * Useful the computation of the fitness showed an egal solution with less genes
+     * @return NULL if no backtracking
+     */
+    default Chromosome backtracked(){
+        return null;
+    }
 }

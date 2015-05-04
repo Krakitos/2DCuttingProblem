@@ -9,8 +9,8 @@ import java.util.Iterator;
  * Created by Morgan on 08/04/2015.
  */
 public class ChromosomePair implements Iterable<Chromosome>{
-    private final Chromosome first;
-    private final Chromosome second;
+    private Chromosome first;
+    private Chromosome second;
 
     public ChromosomePair(@NotNull final Chromosome first, @NotNull final Chromosome second) {
         this.first = first;
@@ -21,8 +21,16 @@ public class ChromosomePair implements Iterable<Chromosome>{
         return first;
     }
 
+    public void first(Chromosome c){
+        first = c;
+    }
+
     public Chromosome second(){
         return second;
+    }
+
+    public void second(Chromosome c){
+        second = c;
     }
 
     @Override
