@@ -114,7 +114,7 @@ public class GeneticAlgorithm extends GeneticAlgorithmEventDispatcher {
                 population.addChromosome(crossover.second());
 
                 crossover.forEach(c -> {
-                    if (RANDOM_GEN.nextGaussian() <= mutationOperator.mutatationRate()) {
+                    if (RANDOM_GEN.nextGaussian() <= mutationOperator.mutationRate()) {
                         Chromosome mutated = mutationOperator.mutate(c);
                         Fitness mutatedFitness = fitnessEvaluator.computeFitness(mutated);
 
