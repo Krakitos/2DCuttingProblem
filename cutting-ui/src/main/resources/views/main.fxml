@@ -150,7 +150,7 @@
                 <Tab text="Solution Preview">
                     <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
                 </Tab>
-                <Tab text="Statistiques">
+                <Tab text="Statistics">
                     <PieChart >
 
                     </PieChart>
