@@ -2,6 +2,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
@@ -145,7 +146,16 @@
                     <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
                 </yAxis>
             </LineChart>
-            <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
+            <TabPane fx:id="tabPane" visible="false">
+                <Tab text="Solution Preview">
+                    <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
+                </Tab>
+                <Tab text="Statistiques">
+                    <PieChart >
+
+                    </PieChart>
+                </Tab>
+            </TabPane>
             <StackPane fx:id="generationProgressContainer" visible="false">
                 <ProgressBar fx:id="generationProgressIndicator" progress="1" visible="true" prefWidth="1.7976931348623157e308"/>
                 <Text fx:id="generationProgressLabel" text="100%"/>

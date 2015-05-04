@@ -13,7 +13,7 @@ import etu.polytech.optim.cutting.GeneticCuttingRunner;
 import etu.polytech.optim.cutting.lang.stop.DurationStrategyObservable;
 import etu.polytech.optim.cutting.lang.stop.IterationStrategyObservable;
 import etu.polytech.optim.genetic.strategies.crossover.SinglePointCrossover;
-import etu.polytech.optim.genetic.strategies.mutation.RandomMutation;
+import etu.polytech.optim.genetic.strategies.mutation.MultipointMutation;
 import etu.polytech.optim.genetic.utils.ChromosomePair;
 import etu.polytech.optim.layout.maxrect.MaxRectPackager;
 import etu.polytech.optim.layout.maxrect.choice.BestShortSideFit;
@@ -54,27 +54,26 @@ public class MainController implements CuttingEngineObserver, Initializable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final PseudoClass TEXTFIELD_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
-
     /** Stage **/
     private Stage stage;
 
     /** Configuration Inputs **/
     @FXML
     public TextField sheetWidthInput;
+
     @FXML
     public TextField sheetHeightInput;
     @FXML
     public TextField sheetPriceInput;
-
     /** Stop **/
     private static final String DURATION_STOP = "Duration";
-    private static final String ITERATIONS_STOP = "Iterations";
 
+    private static final String ITERATIONS_STOP = "Iterations";
     @FXML
     public ComboBox<String> stoppingChooser;
+
     @FXML
     public TextField stoppingValueInput;
-
     /** Buttons **/
     @FXML
     public Button runBtn;
@@ -95,6 +94,8 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @FXML
     private VBox solutionRoot;
+
+    public TabPane tabPane;
 
     @FXML
     public GridPane solutionDisplayer;
@@ -129,7 +130,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
                     .setConfiguration(configuration)
                     .setPackager(new MaxRectPackager(configuration, new BestShortSideFit()))
                     .setCrossoverPolicy(new SinglePointCrossover())
-                    .setMutationPolicy(new RandomMutation(4))
+                    .setMutationPolicy(new MultipointMutation(4, 0.25d))
                     .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
                     .setStoppingCondition(
                             stoppingChooser.selectionModelProperty().get().getSelectedItem().equals(ITERATIONS_STOP) ?
@@ -273,6 +274,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
     }
 
     private void displaySolution(CuttingSolution bestSolution) {
+        tabPane.setVisible(true);
         solutionDisplayer.getChildren().clear();
         new CuttingSolutionDisplayer(solutionDisplayer).render(configuration, bestSolution);
     }
