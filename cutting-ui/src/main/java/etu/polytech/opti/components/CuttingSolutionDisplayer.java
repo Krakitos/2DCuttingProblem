@@ -3,6 +3,7 @@ package etu.polytech.opti.components;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
+import javafx.beans.binding.DoubleBinding;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -27,8 +28,6 @@ public class CuttingSolutionDisplayer {
         final int nbColumns = solution.layout().size() >= 3 ? 3 : solution.layout().size();
         final int nbRows =  solution.layout().size() / nbColumns == 0 ? 1 : solution.layout().size() / nbColumns;
 
-        parent.setGridLinesVisible(true);
-
         for (int i = 0; i < nbColumns; i++) {
             ColumnConstraints c = new ColumnConstraints();
             c.setHgrow(Priority.ALWAYS);
@@ -43,15 +42,15 @@ public class CuttingSolutionDisplayer {
         }
 
 
-        //final DoubleBinding width = parent.widthProperty().divide(nbPerColumn);
-        //final DoubleBinding height = parent.heightProperty().multiply(nbPerColumn).divide(solution.layout().size());
+        final DoubleBinding width = parent.widthProperty().divide(nbColumns);
+        final DoubleBinding height = parent.heightProperty().divide(nbRows);
 
         for (int i = 0; i < solution.layout().size(); i++) {
             Collection<CuttingLayoutElement> elements = solution.layout().get(i);
 
             CuttingPatternView view = new CuttingPatternView();
-            view.prefWidthProperty().bind(parent.widthProperty().divide(nbColumns));
-            view.prefHeightProperty().bind(parent.heightProperty().divide(nbRows));
+            view.prefWidthProperty().bind(width);
+            view.prefHeightProperty().bind(height);
             parent.add(view, i % nbColumns, i / nbColumns);
 
             view.render(configuration, elements);
