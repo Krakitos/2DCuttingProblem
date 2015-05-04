@@ -30,14 +30,14 @@ public class CuttingPatternView extends Pane {
         int grayStep = 256 / config.elements().size();
 
         //Same orientation
-        if(config.sheet().width() > config.sheet().height() && getWidth() > getHeight()){
+        //if(config.sheet().width() > config.sheet().height() && getWidth() > getHeight()){
             scaleX = widthProperty().divide(config.sheet().width());
             scaleY = heightProperty().divide(config.sheet().height());
 
-        }else{ //Rotated
+        /*}else{ //Rotated
             scaleY = widthProperty().divide(config.sheet().width());
             scaleX = heightProperty().divide(config.sheet().height());
-        }
+        }*/
 
         elements.forEach(e -> {
             Color c = Color.grayRgb(grayStep * e.element().id());
