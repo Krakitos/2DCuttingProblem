@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * Created by Morgan on 07/04/2015.
@@ -18,11 +20,15 @@ public class Population {
     private final List<Chromosome> chromosomes;
     private final int maxSize;
 
+    private Map<String, AtomicLong> hitCounter;
+
     public Population(final int maxSize) {
         LOGGER.info("Population fixed to {}", maxSize);
 
         this.maxSize = maxSize;
         chromosomes = new ArrayList<>(maxSize);
+
+        hitCounter = new HashMap<>();
     }
 
     /**
@@ -32,7 +38,6 @@ public class Population {
      * @param chromosome
      */
     public void addChromosome(@NotNull final Chromosome chromosome){
-
         Optional<Chromosome> c = chromosomes.parallelStream().filter(chromosome::equals).max((Comparator.comparingDouble(Chromosome::fitness)));
         if(c.isPresent()){
             if(c.get().fitness() > chromosome.fitness()){
@@ -44,6 +49,8 @@ public class Population {
             }else{
                 return;
             }
+        }else{
+            hitCounter.put(chromosome.toString(), new AtomicLong(0l));
         }
 
 
@@ -54,19 +61,10 @@ public class Population {
             LOGGER.debug("Evictiong of chromosome {} with fitness {}", worst, worst.fitness());
         }
 
+        //Add to the hit counter to see frequencies of values hit
+        hitCounter.get(chromosome.toString()).incrementAndGet();
+
         chromosomes.add(chromosome);
-
-
-
-        if(chromosomes.parallelStream().filter(chromosome::equals).count() == 0) {
-
-            LOGGER.info("Adding chromosome {} to the population ({} / {})", chromosome, chromosomes.size(), maxSize);
-
-
-        }else{
-
-
-        }
     }
 
     /**
@@ -100,5 +98,13 @@ public class Population {
      */
     public int size() {
         return chromosomes.size();
+    }
+
+    /**
+     * Return the hits of each chromosomes
+     * @return
+     */
+    public Map<String, Long> hits(){
+        return hitCounter.entrySet().parallelStream().collect(Collectors.toConcurrentMap(Map.Entry::getKey, e -> e.getValue().longValue()));
     }
 }
