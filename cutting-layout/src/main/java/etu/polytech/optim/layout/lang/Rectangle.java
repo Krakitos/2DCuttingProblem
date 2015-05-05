@@ -46,7 +46,7 @@ public class Rectangle implements Cloneable {
     }
 
     @Override
-    public Rectangle clone() {
+    public final Rectangle clone() {
         return new Rectangle(x, y, width, height);
     }
 
