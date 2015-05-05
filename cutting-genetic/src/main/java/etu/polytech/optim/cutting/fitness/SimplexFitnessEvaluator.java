@@ -82,9 +82,6 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
      * @return
      */
     private GeneticSolution doSimplex(final List<Collection<CuttingLayoutElement>> layout) {
-
-        final int patternCost = configuration.sheet().price() * layout.size();
-
         final LinearConstraintSet constraints = computeConstraints(layout);
         final LinearObjectiveFunction objectiveFunction = computeObjFunction(layout);
 
