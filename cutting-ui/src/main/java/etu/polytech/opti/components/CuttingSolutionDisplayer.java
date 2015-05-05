@@ -53,7 +53,7 @@ public class CuttingSolutionDisplayer {
             view.prefHeightProperty().bind(height);
             parent.add(view, i % nbColumns, i / nbColumns);
 
-            view.render(configuration, elements);
+            view.render(configuration, elements, parent.getHgap(), parent.getVgap());
         }
     }
 
