@@ -54,8 +54,6 @@ public class MainController implements CuttingEngineObserver, Initializable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final PseudoClass TEXTFIELD_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
-    /** Stage **/
-    private Stage stage;
 
     /** Configuration Inputs **/
     @FXML
@@ -107,14 +105,6 @@ public class MainController implements CuttingEngineObserver, Initializable {
     
     private CuttingConfiguration configuration;
     private AtomicInteger runCounter = new AtomicInteger(0);
-
-    /**
-     * Set the stage of this application
-     * @param stage
-     */
-    public void setStage(@NotNull final Stage stage){
-        this.stage = stage;
-    }
 
     /**
      * Handle the click on the run button
