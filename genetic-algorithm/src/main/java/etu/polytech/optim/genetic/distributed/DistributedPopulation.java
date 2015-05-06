@@ -14,10 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
 import java.util.Map;
@@ -103,6 +100,7 @@ public class DistributedPopulation implements Population{
         private static final byte HELLO_MASK = 2;
 
         private MulticastSocket socket;
+        private InetAddress me;
 
         public DistributedServer(int port) throws IOException {
             socket = new MulticastSocket(port);
@@ -118,7 +116,7 @@ public class DistributedPopulation implements Population{
                     DatagramPacket packet = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
                     socket.receive(packet);
 
-                    if (packet.getLength() > 0) {
+                    if (packet.getLength() > 0 && !isMe(packet.getAddress())) {
                         if(LOGGER.isDebugEnabled())
                             LOGGER.debug(HANDLING_MARKER, "Received packet with {} bytes from {}", packet.getLength(), packet.getAddress());
 
@@ -134,6 +132,28 @@ public class DistributedPopulation implements Population{
                     socket.close();
                 } catch (IOException ignored) {}
             }
+        }
+
+        private boolean isMe(InetAddress sender) throws SocketException {
+            if(Objects.isNull(me)) {
+                //Check if the hello doesn't come from here
+                Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+                while (interfaces.hasMoreElements()) {
+                    NetworkInterface i = interfaces.nextElement();
+
+                    Enumeration<InetAddress> addresses = i.getInetAddresses();
+
+                    while (addresses.hasMoreElements()) {
+                        InetAddress address = addresses.nextElement();
+
+                        if (address.equals(sender)) {
+                            me = address;
+                        }
+                    }
+                }
+            }
+
+            return me.equals(sender);
         }
 
         private void sendHello() throws IOException {
@@ -182,21 +202,6 @@ public class DistributedPopulation implements Population{
          * @throws IOException
          */
         private void handleHello(InetAddress sender, DatagramPacket packet) throws IOException {
-            //Check if the hello doesn't come from here
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            while (interfaces.hasMoreElements()){
-                NetworkInterface i = interfaces.nextElement();
-
-                Enumeration<InetAddress> addresses = i.getInetAddresses();
-
-                while (addresses.hasMoreElements()){
-                    InetAddress address = addresses.nextElement();
-
-                    if(address.equals(sender))
-                        return;
-                }
-            }
-
             LOGGER.info(HANDLING_MARKER, "Received HELLO Flag");
 
             if(population.size() > 0)
