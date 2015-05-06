@@ -43,6 +43,8 @@ public class DistributedPopulation implements Population{
 
         this.population = population;
         this.server = new DistributedServer(DEFAULT_PORT);
+
+        new Thread(server, "Distributed Server Thread").start();
     }
 
     public DistributedPopulation(int size) throws IOException {
