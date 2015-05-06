@@ -23,6 +23,8 @@ public class Main extends Application {
         scene.getStylesheets().add("css/styles.css");
 
         primaryStage.setTitle("Cutting Problem");
+        primaryStage.setOnCloseRequest(event -> System.exit(0));
+
         primaryStage.setScene(scene);
         primaryStage.show();
     }
