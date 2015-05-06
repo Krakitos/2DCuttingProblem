@@ -100,6 +100,7 @@ public class DistributedPopulation implements Population{
         private static final int BUFFER_SIZE = 16 * 1024;
 
         private static final byte SOLUTION_MASK = 1;
+        private static final byte HELLO_MASK = 2;
 
         private MulticastSocket socket;
         private Enumeration<NetworkInterface> interfaces;
@@ -116,18 +117,14 @@ public class DistributedPopulation implements Population{
             try {
                 DatagramPacket packet = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
 
+                sendHello();
+
                 for(;;) {
                     socket.receive(packet);
 
-                    /*boolean isMe = false;
-
-                    while (interfaces.hasMoreElements()){
-                        isMe &= interfaces.nextElement().getInterfaceAddresses()
-                                .stream().map(InterfaceAddress::getAddress).anyMatch(a -> a.equals(packet.getAddress()));
-                    }*/
-
                     if (packet.getLength() > 0) {
-                        LOGGER.info(HANDLING_MARKER, "Received packet with {} bytes from {}", packet.getLength(), packet.getAddress());
+                        if(LOGGER.isDebugEnabled())
+                            LOGGER.debug(HANDLING_MARKER, "Received packet with {} bytes from {}", packet.getLength(), packet.getAddress());
                         handlePacket(packet);
                     }
                 }
@@ -142,6 +139,9 @@ public class DistributedPopulation implements Population{
             }
         }
 
+        private void sendHello() throws IOException {
+            socket.send(new DatagramPacket(new byte[]{HELLO_MASK}, 1, MULTICAST_ADDRESS, DEFAULT_PORT));
+        }
 
         public void sendNewSolution(final Chromosome c) throws IOException {
             byte[] content = null;
@@ -173,11 +173,37 @@ public class DistributedPopulation implements Population{
 
             if(header == SOLUTION_MASK)
                 handleSolution(packet.getAddress(), packet);
+            else if(header == HELLO_MASK)
+                handleHello(packet.getAddress(), packet);
             else
                 LOGGER.error("Invalid packet header ({}) received", header);
         }
 
-        private void handleSolution(InetAddress from, DatagramPacket packet) throws IOException {
+        /**
+         * Hello handling. The method will send the best chromosome find until now
+         * @param sender Sender of the packet
+         * @param packet Content of the message
+         * @throws IOException
+         */
+        private void handleHello(InetAddress sender, DatagramPacket packet) throws IOException {
+            LOGGER.info(HANDLING_MARKER, "Received HELLO Flag");
+            if(population.size() > 0)
+                sendNewSolution(fittestChromosome());
+        }
+
+
+        /**
+         * Solution handling. This method will add the chromosome to the population if
+         * <ul>
+         *     <li>Chromosome is not null</li>
+         *     <li>Chromosome class is known of this JVM</li>
+         *     <li>Chromosome is same length of population's chromosomes</li>
+         * </ul>
+         * @param sender Sender of the packet
+         * @param packet Content of the message
+         * @throws IOException
+         */
+        private void handleSolution(InetAddress sender, DatagramPacket packet) throws IOException {
             byte[] content = packet.getData();
             try(ObjectInputStream oin = new ObjectInputStream(new ByteInputStream(content, 1, content.length))){
                 try {
