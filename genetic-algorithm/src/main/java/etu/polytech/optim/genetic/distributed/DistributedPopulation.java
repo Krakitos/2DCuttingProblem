@@ -57,8 +57,9 @@ public class DistributedPopulation implements Population{
         population.addChromosome(chromosome);
 
         try {
-            Chromosome fittest = fittestChromosome();
-            if (population.size() > 0 && chromosome.fitness() < fittest.fitness()){
+            //Check by reference, if the fittest chromosome is $chromosome,
+            //that means we need to dispatch a new best solution
+            if (population.fittestChromosome() == chromosome){
                 server.sendNewSolution(chromosome);
             }
         } catch (IOException e) {
@@ -182,13 +183,8 @@ public class DistributedPopulation implements Population{
                 try {
                     Chromosome c = (Chromosome) oin.readObject();
                     if(Objects.nonNull(c)){
-                        Chromosome fittest = fittestChromosome();
-                        if(population.size() > 0 && fittest.fitness() > c.fitness()){
-                            LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, adding the chromosome to the list");
-                            population.addChromosome(c);
-                        }else if(LOGGER.isDebugEnabled()){
-                            LOGGER.debug(HANDLING_MARKER, "Received SOLUTION Flag, but chromosome is lesser than fittest ({} > {})", c.fitness(), fittest.fitness());
-                        }
+                        LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, adding the chromosome to the list");
+                        population.addChromosome(c);
                     }
                 } catch (ClassNotFoundException e) {
                     LOGGER.fatal("Chromosome Class Not Found !" , e);
