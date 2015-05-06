@@ -97,34 +97,31 @@ public class DistributedPopulation implements Population{
      */
     private class DistributedServer implements Runnable{
 
-        private static final int BUFFER_SIZE = 16 * 1024;
+        private static final int BUFFER_SIZE = 1024;
 
         private static final byte SOLUTION_MASK = 1;
         private static final byte HELLO_MASK = 2;
 
         private MulticastSocket socket;
-        private Enumeration<NetworkInterface> interfaces;
 
         public DistributedServer(int port) throws IOException {
             socket = new MulticastSocket(port);
             socket.joinGroup(MULTICAST_ADDRESS);
-
-            interfaces = NetworkInterface.getNetworkInterfaces();
         }
 
         @Override
         public void run() {
             try {
-                DatagramPacket packet = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
-
                 sendHello();
 
                 for(;;) {
+                    DatagramPacket packet = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
                     socket.receive(packet);
 
                     if (packet.getLength() > 0) {
                         if(LOGGER.isDebugEnabled())
                             LOGGER.debug(HANDLING_MARKER, "Received packet with {} bytes from {}", packet.getLength(), packet.getAddress());
+
                         handlePacket(packet);
                     }
                 }
@@ -158,7 +155,6 @@ public class DistributedPopulation implements Population{
                 System.arraycopy(chromosome, 0, content, 1, chromosome.length);
             }finally {
                 if(content != null){
-
                     LOGGER.info(DISPATCH_MARKER, "Sending new solution {}", c);
 
                     socket.send(new DatagramPacket(content, content.length, MULTICAST_ADDRESS, DEFAULT_PORT));
@@ -186,7 +182,23 @@ public class DistributedPopulation implements Population{
          * @throws IOException
          */
         private void handleHello(InetAddress sender, DatagramPacket packet) throws IOException {
+            //Check if the hello doesn't come from here
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()){
+                NetworkInterface i = interfaces.nextElement();
+
+                Enumeration<InetAddress> addresses = i.getInetAddresses();
+
+                while (addresses.hasMoreElements()){
+                    InetAddress address = addresses.nextElement();
+
+                    if(address.equals(sender))
+                        return;
+                }
+            }
+
             LOGGER.info(HANDLING_MARKER, "Received HELLO Flag");
+
             if(population.size() > 0)
                 sendNewSolution(fittestChromosome());
         }
