@@ -182,8 +182,8 @@ public class DistributedPopulation implements Population{
             try(ObjectInputStream oin = new ObjectInputStream(new ByteInputStream(content, 1, content.length))){
                 try {
                     Chromosome c = (Chromosome) oin.readObject();
-                    if(Objects.nonNull(c)){
-                        LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, adding the chromosome to the list");
+                    if(Objects.nonNull(c) && c.length() == fittestChromosome().length()){
+                        LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, adding the chromosome {{} -> {}} to the list", c, c.fitness());
                         population.addChromosome(c);
                     }
                 } catch (ClassNotFoundException e) {
