@@ -1,9 +1,8 @@
-package etu.polytech.optim.genetic.distributed;
+package etu.polytech.optim.genetic.lang.populations;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import etu.polytech.optim.genetic.lang.Chromosome;
 import etu.polytech.optim.genetic.lang.Population;
-import etu.polytech.optim.genetic.lang.populations.FixedSizePopulation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
