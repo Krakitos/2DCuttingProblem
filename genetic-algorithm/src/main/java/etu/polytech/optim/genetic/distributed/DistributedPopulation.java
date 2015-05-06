@@ -17,8 +17,9 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketAddress;
+import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
 
@@ -53,6 +54,8 @@ public class DistributedPopulation implements Population{
 
     @Override
     public void addChromosome(@NotNull Chromosome chromosome) {
+        population.addChromosome(chromosome);
+
         try {
             Chromosome fittest = fittestChromosome();
             if (population.size() > 0 && chromosome.fitness() < fittest.fitness()){
@@ -60,8 +63,6 @@ public class DistributedPopulation implements Population{
             }
         } catch (IOException e) {
             LOGGER.warn("Unable to send the new chromosome", e);
-        }finally {
-            population.addChromosome(chromosome);
         }
     }
 
@@ -100,23 +101,33 @@ public class DistributedPopulation implements Population{
         private static final byte SOLUTION_MASK = 1;
 
         private MulticastSocket socket;
+        private Enumeration<NetworkInterface> interfaces;
 
         public DistributedServer(int port) throws IOException {
             socket = new MulticastSocket(port);
             socket.joinGroup(MULTICAST_ADDRESS);
+
+            interfaces = NetworkInterface.getNetworkInterfaces();
         }
 
         @Override
         public void run() {
-            ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-
             try {
-                for(;;) {
+                DatagramPacket packet = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
 
-                    SocketAddress sender = socket.getChannel().receive(buffer);
-                    if (buffer.hasRemaining()) {
-                        LOGGER.info(HANDLING_MARKER, "Received packet with {} bytes from {}", buffer.remaining(), sender);
-                        handlePacket(sender, buffer);
+                for(;;) {
+                    socket.receive(packet);
+
+                    /*boolean isMe = false;
+
+                    while (interfaces.hasMoreElements()){
+                        isMe &= interfaces.nextElement().getInterfaceAddresses()
+                                .stream().map(InterfaceAddress::getAddress).anyMatch(a -> a.equals(packet.getAddress()));
+                    }*/
+
+                    if (packet.getLength() > 0) {
+                        LOGGER.info(HANDLING_MARKER, "Received packet with {} bytes from {}", packet.getLength(), packet.getAddress());
+                        handlePacket(packet);
                     }
                 }
 
@@ -155,20 +166,19 @@ public class DistributedPopulation implements Population{
 
         }
 
-        private void handlePacket(SocketAddress from, ByteBuffer packet) throws IOException {
-            packet.flip();
-
-            byte header = packet.get();
+        private void handlePacket(DatagramPacket packet) throws IOException {
+            ByteBuffer buffer = ByteBuffer.wrap(packet.getData(), packet.getOffset(), packet.getLength());
+            byte header = buffer.get();
 
             if(header == SOLUTION_MASK)
-                handleSolution(from, packet);
+                handleSolution(packet.getAddress(), packet);
             else
                 LOGGER.error("Invalid packet header ({}) received", header);
         }
 
-        private void handleSolution(SocketAddress from, ByteBuffer packet) throws IOException {
-            byte[] content = new byte[packet.remaining()];
-            try(ObjectInputStream oin = new ObjectInputStream(new ByteInputStream(content, content.length))){
+        private void handleSolution(InetAddress from, DatagramPacket packet) throws IOException {
+            byte[] content = packet.getData();
+            try(ObjectInputStream oin = new ObjectInputStream(new ByteInputStream(content, 1, content.length))){
                 try {
                     Chromosome c = (Chromosome) oin.readObject();
                     if(Objects.nonNull(c)){
@@ -176,8 +186,8 @@ public class DistributedPopulation implements Population{
                         if(population.size() > 0 && fittest.fitness() > c.fitness()){
                             LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, adding the chromosome to the list");
                             population.addChromosome(c);
-                        }else{
-                            LOGGER.info(HANDLING_MARKER, "Received SOLUTION Flag, but chromosome is lesser than fittest ({} > {})", c.fitness(), fittest.fitness());
+                        }else if(LOGGER.isDebugEnabled()){
+                            LOGGER.debug(HANDLING_MARKER, "Received SOLUTION Flag, but chromosome is lesser than fittest ({} > {})", c.fitness(), fittest.fitness());
                         }
                     }
                 } catch (ClassNotFoundException e) {
