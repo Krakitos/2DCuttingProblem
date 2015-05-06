@@ -2,10 +2,12 @@ package etu.polytech.optim.genetic.lang;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
+
 /**
  * Created by Morgan on 07/04/2015.
  */
-public interface Chromosome extends Comparable<Chromosome> {
+public interface Chromosome extends Comparable<Chromosome>, Serializable{
 
     /**
      * Return the fitness of this chromosome

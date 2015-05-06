@@ -8,6 +8,7 @@ import etu.polytech.optim.cutting.fitness.SimplexFitnessEvaluator;
 import etu.polytech.optim.cutting.lang.GeneticSolution;
 import etu.polytech.optim.cutting.lang.stop.StoppingConditionObservable;
 import etu.polytech.optim.genetic.GeneticAlgorithm;
+import etu.polytech.optim.genetic.distributed.DistributedPopulation;
 import etu.polytech.optim.genetic.lang.Chromosome;
 import etu.polytech.optim.genetic.lang.Population;
 import etu.polytech.optim.genetic.lang.chromosomes.FixedSizeChromosome;
@@ -50,8 +51,8 @@ public class GeneticCuttingRunner extends CuttingEngineObservable implements Gen
     }
 
 
-    public CuttingSolution start(){
-        final Population population = new Population(1000);
+    public CuttingSolution start() throws Exception {
+        final Population population = new DistributedPopulation(1000);
 
         initPopulation(population);
 

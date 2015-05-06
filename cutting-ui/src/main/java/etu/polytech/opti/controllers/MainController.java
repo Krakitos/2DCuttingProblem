@@ -133,7 +133,13 @@ public class MainController implements CuttingEngineObserver, Initializable {
             runner.addObserver(this);
 
             changeProgressVisibility(true);
-            new Thread(runner::start, "Genetic Algorithm Thread").start();
+            new Thread(() -> {
+                try {
+                    runner.start();
+                } catch (Exception e) {
+                    Platform.runLater(() -> showError(e.getMessage()));
+                }
+            }, "Genetic Algorithm Thread").start();
         }
     }
 
