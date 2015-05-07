@@ -6,6 +6,7 @@ package etu.polytech.optim.api.lang;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a solution for the cutting problem
@@ -15,6 +16,7 @@ public class CuttingSolution {
     private final double[] patterns;
     private final List<Collection<CuttingLayoutElement>> layout;
     private final double fitness;
+    private Map<String,Long> hitsMap;
 
     public CuttingSolution(double[] points, List<Collection<CuttingLayoutElement>> layout, double fitness) {
         this.patterns = points;
@@ -37,6 +39,14 @@ public class CuttingSolution {
      */
     public double[] patterns(){
         return patterns;
+    }
+
+    public Map<String, Long> getHitsMap() {
+        return hitsMap;
+    }
+
+    public void setHitsMap(Map<String, Long> hitsMap) {
+        this.hitsMap = hitsMap;
     }
 
     /**

@@ -27,11 +27,14 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -42,10 +45,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 
 /**
@@ -104,7 +110,11 @@ public class MainController implements CuttingEngineObserver, Initializable {
     @FXML
     public LineChart<Long, Double> generationStats;
     private ObservableList<XYChart.Data<Long, Double>> series;
-    
+
+    @FXML
+    public PieChart hitsChart;
+    final Label caption = new Label("");
+
     private CuttingConfiguration configuration;
     private AtomicInteger runCounter = new AtomicInteger(0);
 
@@ -298,6 +308,32 @@ public class MainController implements CuttingEngineObserver, Initializable {
         tabPane.setVisible(true);
         solutionDisplayer.getChildren().clear();
         new CuttingSolutionDisplayer(solutionDisplayer).render(configuration, bestSolution);
+
+
+        ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+
+        bestSolution.getHitsMap().entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .limit(Math.min(bestSolution.getHitsMap().size(), 10))
+                .forEach(e -> pieChartData.add(new PieChart.Data(e.getKey(), e.getValue())));
+
+        Platform.runLater(() -> {
+            hitsChart.setData(pieChartData);
+
+            hitsChart.setTitle("Number of chromosome hits");
+
+            for (Node node : hitsChart.lookupAll(".text.chart-pie-label")) {
+                if (node instanceof Text) {
+                    for (PieChart.Data data : hitsChart.getData()) {
+                        Text text = (Text) node;
+
+                        if (data.getNode() == node) {
+                            text.setText(text.getText() + " " + data.getPieValue() + "%");
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /**

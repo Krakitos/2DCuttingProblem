@@ -54,13 +54,14 @@ public class GeneticCuttingRunner extends CuttingEngineObservable implements Gen
     public CuttingSolution start() throws Exception {
         final Population population = new DistributedPopulation(1000);
 
+
         initPopulation(population);
 
         genetic.addObserver(this);
 
         final Chromosome fittest = genetic.start(population);
         final GeneticSolution solution = evaluator.computeFitness(fittest);
-
+        solution.solution().setHitsMap(population.hits());
         assert solution != null : "Invalid null solution";
 
         fireGenerationFinished(solution.solution());

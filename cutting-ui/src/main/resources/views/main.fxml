@@ -146,12 +146,12 @@
                     <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
                 </yAxis>
             </LineChart>
-            <TabPane fx:id="tabPane" visible="false">
+            <TabPane fx:id="tabPane" visible="true">
                 <Tab text="Solution Preview">
                     <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
                 </Tab>
                 <Tab text="Statistics">
-                    <PieChart >
+                    <PieChart fx:id="hitsChart" >
 
                     </PieChart>
                 </Tab>
