@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
@@ -30,9 +29,11 @@ public class DistributedPopulation implements Population{
 
     private static final int DEFAULT_PORT = 15151;
 
-    private final InetAddress MULTICAST_ADDRESS;
+    private static InetAddress me;
 
+    private final InetAddress MULTICAST_ADDRESS;
     private final Population population;
+
     private final DistributedServer server;
 
     public DistributedPopulation(Population population) throws IOException {
@@ -88,6 +89,29 @@ public class DistributedPopulation implements Population{
         return population.hits();
     }
 
+
+    private static boolean isMe(InetAddress sender) throws SocketException {
+        if(Objects.isNull(me)) {
+            //Check if the hello doesn't come from here
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface i = interfaces.nextElement();
+
+                Enumeration<InetAddress> addresses = i.getInetAddresses();
+
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+
+                    if (address.equals(sender)) {
+                        me = address;
+                    }
+                }
+            }
+        }
+
+        return me.equals(sender);
+    }
+
     /**
      * Class handling the communication protocol
      */
@@ -99,10 +123,9 @@ public class DistributedPopulation implements Population{
         private static final byte HELLO_MASK = 2;
 
         private MulticastSocket socket;
-        private InetAddress me;
 
         public DistributedServer(int port) throws IOException {
-            socket = new MulticastSocket(port);
+            socket = new MulticastSocket(new InetSocketAddress(InetAddress.getLocalHost(), port));
             socket.joinGroup(MULTICAST_ADDRESS);
         }
 
@@ -133,28 +156,6 @@ public class DistributedPopulation implements Population{
             }
         }
 
-        private boolean isMe(InetAddress sender) throws SocketException {
-            if(Objects.isNull(me)) {
-                //Check if the hello doesn't come from here
-                Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-                while (interfaces.hasMoreElements()) {
-                    NetworkInterface i = interfaces.nextElement();
-
-                    Enumeration<InetAddress> addresses = i.getInetAddresses();
-
-                    while (addresses.hasMoreElements()) {
-                        InetAddress address = addresses.nextElement();
-
-                        if (address.equals(sender)) {
-                            me = address;
-                        }
-                    }
-                }
-            }
-
-            return me.equals(sender);
-        }
-
         private void sendHello() throws IOException {
             socket.send(new DatagramPacket(new byte[]{HELLO_MASK}, 1, MULTICAST_ADDRESS, DEFAULT_PORT));
         }
@@ -179,12 +180,10 @@ public class DistributedPopulation implements Population{
                     socket.send(new DatagramPacket(content, content.length, MULTICAST_ADDRESS, DEFAULT_PORT));
                 }
             }
-
         }
 
         private void handlePacket(DatagramPacket packet) throws IOException {
-            ByteBuffer buffer = ByteBuffer.wrap(packet.getData(), packet.getOffset(), packet.getLength());
-            byte header = buffer.get();
+            byte header = packet.getData()[0];
 
             if(header == SOLUTION_MASK)
                 handleSolution(packet.getAddress(), packet);
