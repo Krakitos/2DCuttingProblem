@@ -39,7 +39,7 @@ public class MaxRectPackager extends AbstractCuttingPackager {
     public List<Collection<CuttingLayoutElement>> layout(@NotNull int[] generation) throws LayoutException {
         List<List<Rectangle>> patterns = new ArrayList<>();
 
-        List<CuttingElement> remaining = init(generation, true);
+        List<CuttingElement> remaining = init(generation, false);
 
         usedRectangles = new ArrayList<>();
         freeRectangles = new ArrayList<>();
