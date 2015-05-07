@@ -24,6 +24,8 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -222,7 +224,30 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @Override
     public void onNewSolution(long iteration, @NotNull double fitness) {
-        Platform.runLater(() -> series.add(new XYChart.Data<>(iteration, fitness)));
+        Platform.runLater(() -> {
+            XYChart.Data<Long, Double> point = new XYChart.Data<>(iteration, fitness);
+            series.add(point);
+
+            Node node = point.getNode();
+            final Text dataText = new Text(String.valueOf(point.getYValue()));
+            node.parentProperty().addListener((ov, oldParent, parent) -> {
+                Group parentGroup = (Group) parent;
+                parentGroup.getChildren().add(dataText);
+            });
+
+            node.boundsInParentProperty().addListener((ov, oldBounds, bounds) -> {
+                dataText.setLayoutX(
+                        Math.round(
+                                bounds.getMinX() + bounds.getWidth() / 2 - dataText.prefWidth(-1) / 2
+                        )
+                );
+                dataText.setLayoutY(
+                        Math.round(
+                                bounds.getMaxY() - dataText.prefHeight(-1) * 0.5
+                        )
+                );
+            });
+        });
     }
 
     @Override
