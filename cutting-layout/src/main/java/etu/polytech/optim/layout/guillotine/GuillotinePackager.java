@@ -72,7 +72,7 @@ public class GuillotinePackager extends AbstractCuttingPackager {
         return pack(patterns.parallelStream().map(p -> p.rectangles).collect(Collectors.toList()));
     }
 
-    private class Pattern {
+    public class Pattern {
         public ArrayList<Rectangle> rectangles;
         public Guillotine guillotine;
 
