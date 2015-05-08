@@ -5,11 +5,10 @@ import etu.polytech.optim.layout.guillotine.split.SplitHeuristic;
 import etu.polytech.optim.layout.lang.Rectangle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+import org.omg.CORBA.DoubleHolder;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,41 +37,79 @@ public class Guillotine {
         this.spliter = split;
 
         this.freeRects = new LinkedList<>();
+        freeRects.add(new Rectangle(0, 0, width, height));
     }
 
-    public Optional<Rectangle> insert(final double width, final double height){
-        final Optional<Rectangle> free = freeRects.parallelStream()
-                .filter(r -> (r.width() >= width && r.height() >= height) || r.width() >= height && r.height() >= width) //Filter for rectangle that can hold the piece
-                .collect(Collectors.groupingBy(rect -> {
-                    if (rect.width() == width && rect.height() == height)
-                        return Double.MIN_VALUE;
-                    else if (rect.height() == width && rect.width() == height)
-                        return Double.MIN_VALUE;
-                    else
-                        return rectChoice.score(rect, width, height);
-                })) //Map score -> Rectangle[]
-                .entrySet().parallelStream().sorted((o1, o2) -> Double.compare(o1.getKey(), o2.getKey())) //Order by best fitness
-                .findFirst() //Get the best
-                .map(best -> best.getValue().get(RANDOM.nextInt(best.getValue().size()))); //Get the a rectangle in the list
+    public Rectangle findBestRectangle(double width, double height, DoubleHolder score){
+        score.value = Double.MAX_VALUE;
+        Rectangle best = null;
 
-        free.map(rect -> {
-            if(width > rect.width() || height > rect.height()){
-                //Rotate
-                return new Rectangle(rect.x(), rect.y(), height, width);
-            }else{
-                return new Rectangle(rect.x(), rect.y(), width, height);
+        for (Rectangle freeRect : freeRects) {
+            if(canFit(freeRect, width, height)) {
+                double freeRectScore = rectChoice.score(freeRect, width, height);
+                if (freeRectScore < score.value) {
+                    best = freeRect;
+                    score.value = freeRectScore;
+                }
             }
-        }).ifPresent(placed -> {
-            split(placed, free.get());
-            freeRects.remove(free.get());
-            merge();
-        });
+        }
 
-        return free;
+        return best;
     }
 
-    public void addWaste(Rectangle r) {
-        freeRects.add(r);
+    private boolean canFit(Rectangle freeRect, double width, double height) {
+        return width <= freeRect.width && height <= freeRect.height || height <= freeRect.width && width <= freeRect.height;
+    }
+
+    public void insert(double width, double height, Rectangle selectedRect, List<Rectangle> dest) {
+        boolean bestFlipped = false;
+        
+        // If this rectangle is a perfect match, we pick it instantly.
+        if (width == selectedRect.width && height == selectedRect.height)
+            bestFlipped = false;
+        
+        // If flipping this rectangle is a perfect match, pick that then.
+        else if (height == selectedRect.width && width == selectedRect.height)
+           bestFlipped = true;
+
+        else {
+            boolean canFit = width <= selectedRect.width && height <= selectedRect.height;
+            boolean canFitRotated = height <= selectedRect.width && width <= selectedRect.height;
+
+            // Try if we can fit the rectangle upright.
+            if (canFit && canFitRotated) {
+                //Score not rotated
+                double score = rectChoice.score(selectedRect, width, height);
+
+                //If score not rotated < score rotated, don't rotate, otherwise rotate
+                if(score < rectChoice.score(selectedRect, height, width))
+                    bestFlipped = false;
+                else
+                    bestFlipped = true;
+            }else if(canFit){
+                bestFlipped = false;
+            }else if(canFitRotated){
+                bestFlipped = true;
+            }else{
+                assert false : "WTF cannot fit";
+            }
+        }
+
+        Rectangle newRect = new Rectangle(selectedRect.x, selectedRect.y, 0, 0);
+        if(bestFlipped) {
+            newRect.width = height;
+            newRect.height = width;
+        }else{
+            newRect.width = width;
+            newRect.height = height;
+        }
+
+        freeRects.remove(selectedRect);
+        split(newRect, selectedRect);
+
+        merge();
+
+        dest.add(newRect);
     }
 
     /**
@@ -80,7 +117,7 @@ public class Guillotine {
      * @param placed
      * @param free
      */
-    private void split(Rectangle placed, Rectangle free) {
+    public void split(Rectangle placed, Rectangle free) {
 
         //Adding a rectangle will result of two new empties area
         Rectangle a,b;
@@ -94,12 +131,6 @@ public class Guillotine {
             a = new Rectangle(free.x(), free.y() + placed.height(), placed.width(), free.height() - placed.height());
             b = new Rectangle(free.x() + placed.width(), free.y(), free.width() - placed.width(), free.height());
         }
-
-
-        assert a.width() >= 0 : "Invalid a.width < 0";
-        assert b.width() >= 0 : "Invalid b.width < 0";
-        assert a.height() >= 0 : "Invalid a.height < 0";
-        assert b.height() >= 0 : "Invalid b.height < 0";
 
         if(a.width() > 0 && a.height() > 0)
             freeRects.add(a);
@@ -119,23 +150,23 @@ public class Guillotine {
             for (int j = i + 1; j < freeRects.size(); ++j) {
                 Rectangle r2 = freeRects.get(j);
 
-                if (r.width() == r2.width() && r.x() == r2.x()) {
-                    if (r.y() == r2.y() + r2.height()) {
-                        freeRects.add(new Rectangle(r.x(), r.y() - r2.height(), r.width(), r.height() + r2.height()));
+                if (r.width == r2.width && r.x == r2.x) {
+                    if (r.y == r2.y + r2.height) {
+                        freeRects.add(new Rectangle(r.x, r.y - r2.height, r.width, r.height + r2.height));
                         freeRects.remove(j);
                         --j;
-                    } else if (r.y() + r.height() == r2.y()) {
-                        freeRects.add(new Rectangle(r.x(), r.y(), r.width(), r.height() + r2.height()));
+                    } else if (r.y + r.height == r2.y) {
+                        freeRects.add(new Rectangle(r.x, r.y, r.width, r.height + r2.height));
                         freeRects.remove(r2);
                         --j;
                     }
-                } else if (r.height() == r2.height() && r.y() == r2.y()) {
-                    if (r.x() == r2.x() + r2.width()) {
-                        freeRects.add(new Rectangle(r.x()- r2.width(), r.y(), r.width() + r2.width(), r.height()));
+                } else if (r.height == r2.height && r.y == r2.y) {
+                    if (r.x == r2.x + r2.width) {
+                        freeRects.add(new Rectangle(r.x- r2.width, r.y, r.width + r2.width, r.height));
                         freeRects.remove(r2);
                         --j;
-                    } else if (r.x() + r.width() == r2.x()) {
-                        freeRects.add(new Rectangle(r.x(), r.y(), r.width()+ r2.width(), r.height()));
+                    } else if (r.x + r.width == r2.x) {
+                        freeRects.add(new Rectangle(r.x, r.y, r.width+ r2.width, r.height));
                         freeRects.remove(r2);
                         --j;
                     }
@@ -150,12 +181,6 @@ public class Guillotine {
     public void reset() {
         freeRects.clear();
     }
-
-    /**
-     * Return the heuristic used to chose a rectangle
-     * @return
-     */
-    public RectChoiceHeuristic rectChoiceHeuristic(){ return rectChoice; }
 
     /**
      * Return the heuristic used to spliter rectangles

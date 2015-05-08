@@ -3,74 +3,82 @@ package etu.polytech.optim.layout.guillotine;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingLayoutElement;
+import etu.polytech.optim.layout.AbstractCuttingPackager;
 import etu.polytech.optim.layout.CuttingPackager;
 import etu.polytech.optim.layout.exceptions.LayoutException;
 import etu.polytech.optim.layout.guillotine.choice.RectChoiceHeuristic;
 import etu.polytech.optim.layout.guillotine.split.SplitHeuristic;
 import etu.polytech.optim.layout.lang.Rectangle;
 import org.jetbrains.annotations.NotNull;
+import org.omg.CORBA.DoubleHolder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Morgan on 17/04/2015.
  */
-public class GuillotinePackager implements CuttingPackager {
+public class GuillotinePackager extends AbstractCuttingPackager {
 
-    private final CuttingConfiguration configuration;
+    private RectChoiceHeuristic rectChoice;
+    private SplitHeuristic splitHeuristic;
 
-    private Guillotine guillotine;
-    private List<Collection<CuttingLayoutElement>> patterns;
+    public GuillotinePackager(CuttingConfiguration configuration, RectChoiceHeuristic rectChoice, SplitHeuristic splitHeuristic) {
+        super(configuration);
 
-    public GuillotinePackager(CuttingConfiguration configuration, RectChoiceHeuristic rectChoice, SplitHeuristic splitter) {
-        this.configuration = configuration;
-
-        guillotine = new Guillotine(configuration.sheet().width(), configuration.sheet().height(), rectChoice, splitter);
-        patterns = new ArrayList<>();
+        this.rectChoice = rectChoice;
+        this.splitHeuristic = splitHeuristic;
     }
 
     @Override
     public List<Collection<CuttingLayoutElement>> layout(@NotNull int[] generation) throws LayoutException {
-        guillotine.reset();
-        guillotine.addWaste(new Rectangle(0, 0, configuration.sheet().width(), configuration.sheet().height()));
+        List<Pattern> patterns = new ArrayList<>();
+        List<CuttingElement> elements = init(generation, true);
 
-        List<CuttingElement> elements = new ArrayList<>();
+        while(elements.size() > 0){
+            DoubleHolder bestScore = new DoubleHolder(Double.MAX_VALUE);
+            DoubleHolder currentScore = new DoubleHolder();
 
-        configuration.elements().forEach(element -> {
-            for (int i = 0; i < generation[element.id()]; i++) {
-                elements.add(element);
-            }
-        });
+            Pattern selectedPattern = null;
+            CuttingElement selectedElement = null;
+            Rectangle selectedRect = null;
 
-        Collections.shuffle(elements);
+            for (Pattern pattern : patterns) {
 
-        List<CuttingLayoutElement> pattern = new ArrayList<>();
-        patterns.add(pattern);
+                for (CuttingElement ce : elements) {
+                    Rectangle best = pattern.guillotine.findBestRectangle(ce.width(), ce.height(), currentScore);
+                    if(currentScore.value < bestScore.value){
+                        selectedPattern = pattern;
+                        selectedElement = ce;
+                        selectedRect = best;
 
-        for (CuttingElement element : elements) {
-            Optional<Rectangle> dest = guillotine.insert(element.width(), element.height());
-
-            if(!dest.isPresent()){
-                if(!patterns.contains(pattern))
-                    patterns.add(pattern);
-
-                pattern = new ArrayList<>();
-                guillotine.reset();
-                guillotine.addWaste(new Rectangle(0, 0, configuration.sheet().width(), configuration.sheet().height()));
-
-                dest = guillotine.insert(element.width(), element.height());
-
-                assert dest.isPresent() : "Unable to insert with new pattern";
+                        bestScore.value = currentScore.value;
+                    }
+                }
             }
 
-            Rectangle r = dest.get();
+            //Cannot fit the element in the guillotine, we need to create a new pattern
+            if (Objects.isNull(selectedRect)) {
+                patterns.add(new Pattern(binWidth(), binHeight(), rectChoice, splitHeuristic));
+            }else{
+                //Insert the element and split the remaining space
+                selectedPattern.guillotine.insert(selectedElement.width(), selectedElement.height(), selectedRect, selectedPattern.rectangles);
+                elements.remove(selectedElement);
 
-            pattern.add(new CuttingLayoutElement(r.x(), r.y(), r.width() < element.width() || r.height() < element.height(), element));
+                //assert selectedPattern.rectangles.parallelStream().mapToDouble(Rectangle::area).sum() <= binWidth() * binHeight() : "Bigger than the bin";
+            }
         }
 
-        if(!patterns.contains(pattern))
-            patterns.add(pattern);
+        return pack(patterns.parallelStream().map(p -> p.rectangles).collect(Collectors.toList()));
+    }
 
-        return patterns;
+    private class Pattern {
+        public ArrayList<Rectangle> rectangles;
+        public Guillotine guillotine;
+
+        public Pattern(double width, double height, RectChoiceHeuristic choiceHeuristic, SplitHeuristic splitHeuristic) {
+            rectangles = new ArrayList<>();
+            guillotine = new Guillotine(width, height, choiceHeuristic, splitHeuristic);
+        }
     }
 }
