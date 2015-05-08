@@ -33,8 +33,7 @@ public abstract class AbstractCuttingPackager implements CuttingPackager {
 
                 }
 
-                if(!found)
-                    assert false : "Element not found corresponding to rectangle " + r;
+                assert found : "Element not found corresponding to rectangle " + r;
             }
 
             patterns.add(elements);
