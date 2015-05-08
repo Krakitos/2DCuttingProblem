@@ -15,15 +15,20 @@ import etu.polytech.optim.cutting.lang.stop.IterationStrategyObservable;
 import etu.polytech.optim.genetic.strategies.crossover.SinglePointCrossover;
 import etu.polytech.optim.genetic.strategies.mutation.MultipointMutation;
 import etu.polytech.optim.genetic.utils.ChromosomePair;
+import etu.polytech.optim.layout.guillotine.GuillotinePackager;
+import etu.polytech.optim.layout.guillotine.split.MinimizeArea;
 import etu.polytech.optim.layout.maxrect.MaxRectPackager;
 import etu.polytech.optim.layout.maxrect.choice.BestShortSideFit;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.LineChart;
@@ -32,12 +37,15 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +70,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final PseudoClass TEXTFIELD_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
+    private final PseudoClass COMBOBOX_ERROR_PSEUDOCLASS = PseudoClass.getPseudoClass("error");
 
     /** Configuration Inputs **/
     @FXML
@@ -98,6 +107,23 @@ public class MainController implements CuttingEngineObserver, Initializable {
     @FXML
     public Text generationProgressLabel;
 
+    /** Layout config **/
+
+    @FXML
+    public ComboBox<String> layoutChooser;
+
+    @FXML
+    public HBox layoutParameters;
+
+    private static final ObservableList<String> SELECTION_HEURISTIC =
+            FXCollections.observableArrayList("Best Area", "Best Short Side", "Best Long Side",
+                    "Worst Area", "Worst Short Side", "Worst Long Side");
+
+    private static final ObservableList<String> SPLIT_HEURISTIC =
+            FXCollections.observableArrayList("Longer Axis", "Longer Left over Axis", "Maximize Area",
+                    "Minimize Area", "Shorter Axis", "Shorter Left over Axis");
+
+
     @FXML
     private VBox solutionRoot;
 
@@ -113,7 +139,6 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @FXML
     public PieChart hitsChart;
-    final Label caption = new Label("");
 
     private CuttingConfiguration configuration;
     private AtomicInteger runCounter = new AtomicInteger(0);
@@ -130,7 +155,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
             GeneticCuttingRunner runner = new GeneticCuttingRunner.Builder()
                     .setConfiguration(configuration)
-                    .setPackager(new MaxRectPackager(configuration, new BestShortSideFit()))
+                    .setPackager(new GuillotinePackager(configuration, new etu.polytech.optim.layout.guillotine.choice.BestShortSideFit(), new MinimizeArea()))
                     .setCrossoverPolicy(new SinglePointCrossover())
                     .setMutationPolicy(new MultipointMutation(4, 0.25d))
                     .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
@@ -203,9 +228,33 @@ public class MainController implements CuttingEngineObserver, Initializable {
             }catch (NumberFormatException e){
                 stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, true);
                 LOGGER.warn("Stopping condition not a valid long {}", stoppingValueInput.getText());
+                return false;
             }
 
             stoppingValueInput.pseudoClassStateChanged(TEXTFIELD_ERROR_PSEUDOCLASS, false);
+        }
+
+        if(layoutChooser.getSelectionModel().isEmpty()) {
+            layoutChooser.pseudoClassStateChanged(COMBOBOX_ERROR_PSEUDOCLASS, true);
+            LOGGER.warn("Layout algorithm not defined");
+
+            return false;
+        }else {
+            layoutChooser.pseudoClassStateChanged(COMBOBOX_ERROR_PSEUDOCLASS, false);
+        }
+
+
+        for (Node node : layoutParameters.getChildren()) {
+            if(node instanceof ComboBox){
+                if(((ComboBox) node).getSelectionModel().isEmpty()){
+                    node.pseudoClassStateChanged(COMBOBOX_ERROR_PSEUDOCLASS, true);
+                    LOGGER.warn("Layout parameters not defined");
+
+                    return false;
+                }else{
+                    node.pseudoClassStateChanged(COMBOBOX_ERROR_PSEUDOCLASS, false);
+                }
+            }
         }
 
         return true;
@@ -230,6 +279,27 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
         solutionDisplayer.prefWidthProperty().bind(solutionRoot.widthProperty());
         solutionDisplayer.prefHeightProperty().bind(solutionRoot.heightProperty().subtract(generationStats.heightProperty()));
+
+        layoutChooser.setItems(FXCollections.observableArrayList("Guillotine", "MaxRect"));
+        layoutChooser.setOnAction((event) -> {
+            String selectedItem = layoutChooser.getSelectionModel().getSelectedItem();
+            System.out.println("Changed " + selectedItem);
+
+            if (selectedItem.equals("Guillotine")) {
+                layoutParameters.getChildren().clear();
+                layoutParameters.getChildren().addAll(new Text("Selection"), new ComboBox<>(SELECTION_HEURISTIC), new Text("Split"), new ComboBox<>(SPLIT_HEURISTIC));
+            } else {
+                layoutParameters.getChildren().clear();
+                layoutParameters.getChildren().addAll(
+                        new Text("Selection"), new ComboBox<>(FXCollections.observableArrayList("Best Short Side")),
+                        new Text("Split"), new ComboBox<>(FXCollections.observableArrayList("Minimize Area")));
+
+                Tooltip t = new Tooltip("Be Careful, this algorithm doesn't follow the guillotine constraint !");
+                t.setAutoHide(true);
+                Bounds screen = layoutChooser.localToScreen(layoutChooser.getLayoutBounds());
+                t.show(layoutChooser, screen.getMinX(), screen.getMinY() - t.getHeight());
+            }
+        });
     }
 
     @Override

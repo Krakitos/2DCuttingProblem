@@ -9,7 +9,7 @@
 <?import javafx.scene.text.Text?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="etu.polytech.opti.controllers.MainController">
     <left>
-        <VBox fx:id="piecesRoot" prefWidth="500" alignment="CENTER">
+        <VBox fx:id="piecesRoot" prefWidth="400" alignment="CENTER">
             <spacing>5</spacing>
             <!-- Title -->
             <Label text="Configuration" style="-fx-font-weight: bold" />
@@ -63,47 +63,19 @@
                     <Insets top="5" left="5" right="5" bottom="5" />
                 </padding>
             </ListView>
+            <Separator orientation="HORIZONTAL" />
 
-            <!-- Pieces -->
-            <VBox fx:id="piecesConfiguratorHolder" alignment="CENTER" spacing="5">
-                <HBox spacing="5" alignment="CENTER">
-                    <padding>
-                        <Insets right="5" left="5" />
-                    </padding>
-                    <TextField fx:id="pieceWidthInput" promptText="Width">
-                        <tooltip>
-                            <Tooltip text="Piece's width" />
-                        </tooltip>
-                    </TextField>
-                    <Label text="x" />
-                    <TextField fx:id="pieceHeightInput" promptText="Height">
-                        <tooltip>
-                            <Tooltip text="Piece's height" />
-                        </tooltip>
-                    </TextField>
-                    <Label text=":" />
-                    <TextField fx:id="pieceQuantityInput" promptText="Quantity">
-                        <tooltip>
-                            <Tooltip text="Amount of piece of this kind to make" />
-                        </tooltip>
-                    </TextField>
-                </HBox>
-
-                <Button fx:id="addPiece" text="Add piece" onAction="#handleAddPiece" styleClass="blue-button">
-                    <graphic>
-                        <ImageView fitWidth="30" fitHeight="30">
-                            <Image url="@../icons/add.png" />
-                        </ImageView>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="Add a new kind of piece" />
-                    </tooltip>
-                </Button>
-            </VBox>
+            <!-- Layout config -->
+            <Label text="Layout Configuration" />
+            <HBox fx:id="layoutConfigContainer" alignment="CENTER" spacing="5">
+                <Text>Layout algorithm</Text>
+                <ComboBox fx:id="layoutChooser" />
+            </HBox>
+            <HBox fx:id="layoutParameters" alignment="CENTER" spacing="5"/>
             <Separator orientation="HORIZONTAL" />
 
             <!-- Run configuration -->
-            <VBox>
+            <VBox alignment="CENTER">
                 <HBox>
                     <TextField fx:id="stoppingValueInput" promptText="Iterations/Duration" prefWidth="260" />
                     <ComboBox fx:id="stoppingChooser"/>
@@ -146,14 +118,15 @@
                     <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
                 </yAxis>
             </LineChart>
-            <TabPane fx:id="tabPane" visible="true">
+            <TabPane fx:id="tabPane" visible="false">
                 <Tab text="Solution Preview">
                     <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
                 </Tab>
-                <Tab text="Statistics">
-                    <PieChart fx:id="hitsChart" >
+                <Tab text="Running Summary">
 
-                    </PieChart>
+                </Tab>
+                <Tab text="Frequencies">
+                    <PieChart fx:id="hitsChart" />
                 </Tab>
             </TabPane>
             <StackPane fx:id="generationProgressContainer" visible="false">
