@@ -36,7 +36,7 @@ public class GuillotinePackager extends AbstractCuttingPackager {
         List<CuttingElement> elements = init(generation, true);
 
         while(elements.size() > 0){
-            DoubleHolder bestScore = new DoubleHolder(Double.MAX_VALUE);
+            double bestScore = Double.MAX_VALUE;
             DoubleHolder currentScore = new DoubleHolder();
 
             Pattern selectedPattern = null;
@@ -47,12 +47,12 @@ public class GuillotinePackager extends AbstractCuttingPackager {
 
                 for (CuttingElement ce : elements) {
                     Rectangle best = pattern.guillotine.findBestRectangle(ce.width(), ce.height(), currentScore);
-                    if(currentScore.value < bestScore.value){
+                    if(currentScore.value < bestScore){
                         selectedPattern = pattern;
                         selectedElement = ce;
                         selectedRect = best;
 
-                        bestScore.value = currentScore.value;
+                        bestScore = currentScore.value;
                     }
                 }
             }
@@ -72,7 +72,7 @@ public class GuillotinePackager extends AbstractCuttingPackager {
         return pack(patterns.parallelStream().map(p -> p.rectangles).collect(Collectors.toList()));
     }
 
-    public class Pattern {
+    public static class Pattern {
         public ArrayList<Rectangle> rectangles;
         public Guillotine guillotine;
 
