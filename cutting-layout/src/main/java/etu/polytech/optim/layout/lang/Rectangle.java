@@ -9,6 +9,10 @@ public class Rectangle implements Cloneable {
     public double width;
     public double height;
 
+    public Rectangle(){
+        this(0, 0, 0, 0);
+    }
+
     public Rectangle(double x, double y, final double width, final double height) {
         this.x = x;
         this.y = y;
