@@ -6,8 +6,8 @@ import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.layout.AbstractCuttingPackager;
 import etu.polytech.optim.layout.CuttingPackager;
 import etu.polytech.optim.layout.exceptions.LayoutException;
-import etu.polytech.optim.layout.guillotine.choice.RectChoiceHeuristic;
-import etu.polytech.optim.layout.guillotine.split.SplitHeuristic;
+import etu.polytech.optim.layout.guillotine.choice.*;
+import etu.polytech.optim.layout.guillotine.split.*;
 import etu.polytech.optim.layout.lang.Rectangle;
 import org.jetbrains.annotations.NotNull;
 import org.omg.CORBA.DoubleHolder;
@@ -72,6 +72,7 @@ public class GuillotinePackager extends AbstractCuttingPackager {
         return pack(patterns.parallelStream().map(p -> p.rectangles).collect(Collectors.toList()));
     }
 
+
     public static class Pattern {
         public ArrayList<Rectangle> rectangles;
         public Guillotine guillotine;
@@ -79,6 +80,71 @@ public class GuillotinePackager extends AbstractCuttingPackager {
         public Pattern(double width, double height, RectChoiceHeuristic choiceHeuristic, SplitHeuristic splitHeuristic) {
             rectangles = new ArrayList<>();
             guillotine = new Guillotine(width, height, choiceHeuristic, splitHeuristic);
+        }
+    }
+
+    public static class GuillotineFactory implements Factory{
+
+
+        public static final Collection<String> AVAILABLE_SELECTOR = Arrays.asList("Best Area", "Best Short Side", "Best Long Side",
+                "Worst Area", "Worst Short Side", "Worst Long Side");
+
+        public static final Collection<String> AVAILABLE_SPLITTER = Arrays.asList("Longer Axis", "Longer Left over Axis", "Maximize Area",
+                "Minimize Area", "Shorter Axis", "Shorter Left over Axis");
+
+        @Override
+        public CuttingPackager createPackager(CuttingConfiguration config, String selector, String splitter) {
+            RectChoiceHeuristic choiceHeuristic;
+            SplitHeuristic splitHeuristic;
+
+
+            switch (selector.toLowerCase()){
+                case "best area" :
+                    choiceHeuristic = new BestAreaFit();
+                    break;
+                case "best short side":
+                    choiceHeuristic = new BestShortSideFit();
+                    break;
+                case "best long side":
+                    choiceHeuristic = new BestLongSideFit();
+                    break;
+                case "worst area":
+                    choiceHeuristic = new WorstAreaFit();
+                    break;
+                case "worst short side":
+                    choiceHeuristic = new WorstShortFit();
+                    break;
+                case "worst long side":
+                    choiceHeuristic = new WorstLongFit();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown selector " + selector);
+            }
+
+            switch (splitter.toLowerCase()){
+                case "longer axis":
+                    splitHeuristic = new LongerAxis();
+                    break;
+                case "longer Left over axis":
+                    splitHeuristic = new LongerLeftOverAxis();
+                    break;
+                case "maximize area":
+                    splitHeuristic = new MaximizeArea();
+                    break;
+                case "minimize area":
+                    splitHeuristic = new MinimizeArea();
+                    break;
+                case "shorter axis":
+                    splitHeuristic = new ShorterAxis();
+                    break;
+                case "shorter left over axis":
+                    splitHeuristic = new ShorterLeftOverAxis();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown splitter " + splitter);
+            }
+
+            return new GuillotinePackager(config, choiceHeuristic, splitHeuristic);
         }
     }
 }

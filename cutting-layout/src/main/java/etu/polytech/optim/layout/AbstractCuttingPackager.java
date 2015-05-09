@@ -82,4 +82,9 @@ public abstract class AbstractCuttingPackager implements CuttingPackager {
     protected double binHeight(){
         return configuration.sheet().height();
     }
+
+
+    public interface Factory {
+        CuttingPackager createPackager(CuttingConfiguration config, String selector, String splitter) throws IllegalArgumentException;
+    }
 }

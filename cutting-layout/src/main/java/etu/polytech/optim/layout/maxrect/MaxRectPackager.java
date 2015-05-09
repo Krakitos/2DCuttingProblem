@@ -4,18 +4,17 @@ import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
 import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.layout.AbstractCuttingPackager;
+import etu.polytech.optim.layout.CuttingPackager;
 import etu.polytech.optim.layout.exceptions.LayoutException;
 import etu.polytech.optim.layout.lang.Rectangle;
+import etu.polytech.optim.layout.maxrect.choice.BestShortSideFit;
 import etu.polytech.optim.layout.maxrect.choice.FreeRectChoiceHeuristic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.omg.CORBA.DoubleHolder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Morgan on 27/04/2015.
@@ -215,5 +214,26 @@ public class MaxRectPackager extends AbstractCuttingPackager {
         return r1.x() >= r2.x() && r1.y() >= r2.y() &&
                 r1.x() + r1.width() <= r2.x() + r2.width() &&
                 r1.y() + r1.height() <= r2.y() + r2.height();
+    }
+
+    public static class MaxRectFactory implements Factory{
+
+        public static final Collection<String> AVAILABLE_SELECTOR = Collections.singletonList("Best Short Side");
+        public static final Collection<String> AVAILABLE_SPLITTER = Collections.singletonList("Minimize Area");
+
+        @Override
+        public CuttingPackager createPackager(CuttingConfiguration config, String selector, String splitter) throws IllegalArgumentException {
+            FreeRectChoiceHeuristic choiceHeuristic;
+
+            switch (selector.toLowerCase()){
+                case "best short side":
+                    choiceHeuristic = new BestShortSideFit();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown selector " + selector);
+            }
+
+            return new MaxRectPackager(config, choiceHeuristic);
+        }
     }
 }
