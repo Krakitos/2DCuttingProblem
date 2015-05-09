@@ -71,7 +71,12 @@
                 <Text>Layout algorithm</Text>
                 <ComboBox fx:id="layoutChooser" />
             </HBox>
-            <HBox fx:id="layoutParameters" alignment="CENTER" spacing="5"/>
+            <HBox fx:id="layoutParameters" alignment="CENTER" spacing="5">
+                <Text text="Selection" />
+                <ComboBox fx:id="selectorChooser" />
+                <Text text="Splitter" />
+                <ComboBox fx:id="splitterChooser" />
+            </HBox>
             <Separator orientation="HORIZONTAL" />
 
             <!-- Run configuration -->

@@ -15,6 +15,9 @@ import etu.polytech.optim.cutting.lang.stop.IterationStrategyObservable;
 import etu.polytech.optim.genetic.strategies.crossover.SinglePointCrossover;
 import etu.polytech.optim.genetic.strategies.mutation.MultipointMutation;
 import etu.polytech.optim.genetic.utils.ChromosomePair;
+import etu.polytech.optim.layout.AbstractCuttingPackager;
+import etu.polytech.optim.layout.CuttingPackager;
+import etu.polytech.optim.layout.guillotine.Guillotine;
 import etu.polytech.optim.layout.guillotine.GuillotinePackager;
 import etu.polytech.optim.layout.guillotine.split.MinimizeArea;
 import etu.polytech.optim.layout.maxrect.MaxRectPackager;
@@ -115,14 +118,13 @@ public class MainController implements CuttingEngineObserver, Initializable {
     @FXML
     public HBox layoutParameters;
 
-    private static final ObservableList<String> SELECTION_HEURISTIC =
-            FXCollections.observableArrayList("Best Area", "Best Short Side", "Best Long Side",
-                    "Worst Area", "Worst Short Side", "Worst Long Side");
+    @FXML
+    public ComboBox<String> selectorChooser;
 
-    private static final ObservableList<String> SPLIT_HEURISTIC =
-            FXCollections.observableArrayList("Longer Axis", "Longer Left over Axis", "Maximize Area",
-                    "Minimize Area", "Shorter Axis", "Shorter Left over Axis");
+    @FXML
+    public ComboBox<String> splitterChooser;
 
+    /** Solution **/
 
     @FXML
     private VBox solutionRoot;
@@ -150,34 +152,55 @@ public class MainController implements CuttingEngineObserver, Initializable {
     public void handleRun(ActionEvent actionEvent) {
         LOGGER.debug("Clicked Run");
 
-        if(validateInputs()){
-            long stopValue = Long.parseLong(stoppingValueInput.getText());
+        try {
+            if (validateInputs()) {
+                long stopValue = Long.parseLong(stoppingValueInput.getText());
 
-            GeneticCuttingRunner runner = new GeneticCuttingRunner.Builder()
-                    .setConfiguration(configuration)
-                    .setPackager(new GuillotinePackager(configuration, new etu.polytech.optim.layout.guillotine.choice.BestShortSideFit(), new MinimizeArea()))
-                    .setCrossoverPolicy(new SinglePointCrossover())
-                    .setMutationPolicy(new MultipointMutation(4, 0.25d))
-                    .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
-                    .setStoppingCondition(
-                            stoppingChooser.selectionModelProperty().get().getSelectedItem().equals(ITERATIONS_STOP) ?
-                                    new IterationStrategyObservable(stopValue) : new DurationStrategyObservable(stopValue, TimeUnit.SECONDS))
-                    .build();
+                GeneticCuttingRunner runner = new GeneticCuttingRunner.Builder()
+                        .setConfiguration(configuration)
+                        .setPackager(parsePackager())
+                        .setCrossoverPolicy(new SinglePointCrossover())
+                        .setMutationPolicy(new MultipointMutation(4, 0.25d))
+                        .setSelectionPolicy(population -> new ChromosomePair(population.fittestChromosome(), population.getRandom()))
+                        .setStoppingCondition(
+                                stoppingChooser.selectionModelProperty().get().getSelectedItem().equals(ITERATIONS_STOP) ?
+                                        new IterationStrategyObservable(stopValue) : new DurationStrategyObservable(stopValue, TimeUnit.SECONDS))
+                        .build();
 
-            series = FXCollections.observableArrayList();
-            generationStats.getData().add(new XYChart.Series<>("Run #" + runCounter.incrementAndGet(), series));
+                series = FXCollections.observableArrayList();
+                generationStats.getData().add(new XYChart.Series<>("Run #" + runCounter.incrementAndGet(), series));
 
-            runner.addObserver(this);
+                runner.addObserver(this);
 
-            changeProgressVisibility(true);
-            new Thread(() -> {
-                try {
-                    runner.start();
-                } catch (Exception e) {
-                    Platform.runLater(() -> showError(e.getMessage()));
-                }
-            }, "Genetic Algorithm Thread").start();
+                changeProgressVisibility(true);
+                new Thread(() -> {
+                    try {
+                        runner.start();
+                    } catch (Exception e) {
+                        Platform.runLater(() -> showError(e.getMessage()));
+                    }
+                }, "Genetic Algorithm Thread").start();
+            }
+        }catch (IllegalArgumentException e){
+            showError(e.getMessage());
         }
+    }
+
+    private CuttingPackager parsePackager() {
+
+        AbstractCuttingPackager.Factory factory;
+
+        if (layoutChooser.getSelectionModel().getSelectedItem().toLowerCase().equals("guillotine")) {
+            factory = new GuillotinePackager.GuillotineFactory();
+        } else {
+            factory = new MaxRectPackager.MaxRectFactory();
+        }
+
+        return factory.createPackager(
+                configuration,
+                selectorChooser.getSelectionModel().getSelectedItem(),
+                splitterChooser.getSelectionModel().getSelectedItem()
+        );
     }
 
     private boolean validateInputs() {
@@ -286,13 +309,11 @@ public class MainController implements CuttingEngineObserver, Initializable {
             System.out.println("Changed " + selectedItem);
 
             if (selectedItem.equals("Guillotine")) {
-                layoutParameters.getChildren().clear();
-                layoutParameters.getChildren().addAll(new Text("Selection"), new ComboBox<>(SELECTION_HEURISTIC), new Text("Split"), new ComboBox<>(SPLIT_HEURISTIC));
+                selectorChooser.setItems(FXCollections.observableArrayList(GuillotinePackager.GuillotineFactory.AVAILABLE_SELECTOR));
+                splitterChooser.setItems(FXCollections.observableArrayList(GuillotinePackager.GuillotineFactory.AVAILABLE_SPLITTER));
             } else {
-                layoutParameters.getChildren().clear();
-                layoutParameters.getChildren().addAll(
-                        new Text("Selection"), new ComboBox<>(FXCollections.observableArrayList("Best Short Side")),
-                        new Text("Split"), new ComboBox<>(FXCollections.observableArrayList("Minimize Area")));
+                selectorChooser.setItems(FXCollections.observableArrayList(MaxRectPackager.MaxRectFactory.AVAILABLE_SELECTOR));
+                splitterChooser.setItems(FXCollections.observableArrayList(MaxRectPackager.MaxRectFactory.AVAILABLE_SPLITTER));
 
                 Tooltip t = new Tooltip("Be Careful, this algorithm doesn't follow the guillotine constraint !");
                 t.setAutoHide(true);
