@@ -89,7 +89,8 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
         try {
             final PointValuePair optimal = new SimplexSolver().optimize(objectiveFunction, constraints, GoalType.MINIMIZE, new NonNegativeConstraint(true));
 
-            double[] optimalPoint = optimal.getPoint();
+            double[] optimalPoint = new double[optimal.getPoint().length];
+            Arrays.setAll(optimalPoint, i -> Math.ceil(optimal.getPoint()[i]));
 
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug(SIMPLEX_MARKER, "Simplex done, best fit is {}", Arrays.toString(optimalPoint));
@@ -100,7 +101,7 @@ public class SimplexFitnessEvaluator implements FitnessEvaluator<GeneticSolution
 
             for (int i = 0; i < optimalPoint.length; i++) {
                 if(optimalPoint[i] >= 0.0d){
-                    fitness += Math.ceil(optimalPoint[i]);
+                    fitness += optimalPoint[i];
                     fitness += configuration.sheet().price();
 
                     for (CuttingLayoutElement element : layout.get(i)) {
