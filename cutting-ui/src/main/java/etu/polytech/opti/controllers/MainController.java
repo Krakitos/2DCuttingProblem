@@ -404,7 +404,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         bestSolution.getHitsMap().entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
+                .sorted(Map.Entry.comparingByValue((l1, l2) -> -Long.compare(l1, l2)))
                 .limit(Math.min(bestSolution.getHitsMap().size(), 10))
                 .forEach(e -> pieChartData.add(new PieChart.Data(e.getKey(), e.getValue())));
 
