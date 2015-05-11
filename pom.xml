@@ -11,7 +11,8 @@
         <module>cutting-api</module>
         <module>cutting-ui</module>
         <module>cutting-layout</module>
-        <module>cutting-engine</module>
+        <module>genetic-algorithm</module>
+        <module>cutting-genetic</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -26,9 +27,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
                 <configuration>
-                    <source>
-
-                    </source>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
         </plugins>

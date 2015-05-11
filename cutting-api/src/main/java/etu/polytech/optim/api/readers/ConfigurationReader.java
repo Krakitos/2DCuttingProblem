@@ -2,12 +2,10 @@ package etu.polytech.optim.api.readers;
 
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
-import etu.polytech.optim.api.lang.CuttingSheet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,7 +19,9 @@ public abstract class ConfigurationReader {
      * @throws IOException
      */
     public CuttingConfiguration readConfiguration() throws IOException{
-        int sheetWith = 0, sheetHeight = 0;
+        CuttingConfiguration.Builder builder = new CuttingConfiguration.Builder();
+
+        int sheetWidth = 0, sheetHeight = 0;
         Map<CuttingElement, Integer> elements;
 
         try(BufferedReader reader = new BufferedReader(getReader())){
@@ -29,7 +29,7 @@ public abstract class ConfigurationReader {
                 String[] line = reader.readLine().split("=");
                 if(line.length == 2){
                     if(line[0].equalsIgnoreCase("lx"))
-                        sheetWith = Integer.parseInt(line[1]);
+                        sheetWidth = Integer.parseInt(line[1]);
                     else if(line[0].equalsIgnoreCase("ly"))
                         sheetHeight = Integer.parseInt(line[1]);
                     else
@@ -39,8 +39,9 @@ public abstract class ConfigurationReader {
                 }
             }
 
+            builder.setSheet(sheetWidth, sheetHeight, 20);
+
             int nbItems = Integer.parseInt(reader.readLine().split("=")[1]);
-            elements = new HashMap<>(nbItems);
 
             for (int i = 0; i < nbItems; i++) {
                 String[] elementDeclaration = reader.readLine().split("\\t");
@@ -49,12 +50,12 @@ public abstract class ConfigurationReader {
                     float eHeight = Float.parseFloat(elementDeclaration[1]);
                     int count = Integer.parseInt(elementDeclaration[2]);
 
-                    elements.put(new CuttingElement(eWidth, eHeight), count);
+                    builder.addElement(eWidth, eHeight, count);
                 }
             }
         }
 
-        return new CuttingConfiguration(new CuttingSheet(sheetWith, sheetHeight), elements);
+        return builder.build();
     }
 
     protected abstract Reader getReader() throws IOException;

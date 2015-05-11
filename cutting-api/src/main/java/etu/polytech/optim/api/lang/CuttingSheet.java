@@ -7,10 +7,12 @@ public class CuttingSheet {
 
     private final int width;
     private final int height;
+    private final int price;
 
-    public CuttingSheet(int width, int height) {
+    public CuttingSheet(int width, int height, int price) {
         this.width = width;
         this.height = height;
+        this.price = price;
     }
 
     /**
@@ -27,6 +29,14 @@ public class CuttingSheet {
      */
     public int height(){
         return height;
+    }
+
+    /**
+     * Price of a pattern to print
+     * @return
+     */
+    public int price() {
+        return price;
     }
 
     /**

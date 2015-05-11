@@ -38,6 +38,10 @@
     -fx-border-color: red;
 }
 
+.combo-box:error{
+    -fx-border-color: red;
+}
+
 .progress-bar{
     -fx-accent:#73BB05;
 }

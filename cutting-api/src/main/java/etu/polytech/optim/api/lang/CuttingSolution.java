@@ -1,25 +1,27 @@
 package etu.polytech.optim.api.lang;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.Map;
-
 /**
  * Created by Morgan on 11/03/2015.
  */
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a solution for the cutting problem
  */
 public class CuttingSolution {
 
-    private final Map<CuttingSheet, Integer> patterns;
-    private final int patternPrice;
+    private final double[] patterns;
+    private final List<Collection<CuttingLayoutElement>> layout;
+    private final double fitness;
+    private Map<String,Long> hitsMap;
 
-    public CuttingSolution(@NotNull final Map<CuttingSheet, Integer> patterns, final int patternPrice) {
-        this.patterns = patterns;
-        this.patternPrice = patternPrice;
+    public CuttingSolution(double[] points, List<Collection<CuttingLayoutElement>> layout, double fitness) {
+        this.patterns = points;
+        this.layout = layout;
+        this.fitness = fitness;
     }
 
     /**
@@ -27,15 +29,31 @@ public class CuttingSolution {
      * Total price of the solution
      * @return
      */
-    public int fitness(){
-        return patterns.entrySet().stream().mapToInt(entry -> entry.getValue() * patternPrice).sum();
+    public double fitness(){
+        return fitness;
     }
 
     /**
      * Pattern and the number of time to print the pattern
      * @return
      */
-    public Collection<Map.Entry<CuttingSheet, Integer>> patterns(){
-        return patterns.entrySet();
+    public double[] patterns(){
+        return patterns;
+    }
+
+    public Map<String, Long> getHitsMap() {
+        return hitsMap;
+    }
+
+    public void setHitsMap(Map<String, Long> hitsMap) {
+        this.hitsMap = hitsMap;
+    }
+
+    /**
+     * Number of piece by pattern
+     * @return
+     */
+    public List<Collection<CuttingLayoutElement>> layout(){
+        return layout;
     }
 }
