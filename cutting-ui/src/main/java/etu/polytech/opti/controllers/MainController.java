@@ -4,6 +4,7 @@ import etu.polytech.opti.components.CuttingElementView;
 import etu.polytech.opti.components.CuttingSolutionDisplayer;
 import etu.polytech.optim.api.lang.CuttingConfiguration;
 import etu.polytech.optim.api.lang.CuttingElement;
+import etu.polytech.optim.api.lang.CuttingLayoutElement;
 import etu.polytech.optim.api.lang.CuttingSolution;
 import etu.polytech.optim.api.observers.CuttingEngineObserver;
 import etu.polytech.optim.api.observers.ProgressObservable;
@@ -23,6 +24,10 @@ import etu.polytech.optim.layout.guillotine.split.MinimizeArea;
 import etu.polytech.optim.layout.maxrect.MaxRectPackager;
 import etu.polytech.optim.layout.maxrect.choice.BestShortSideFit;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -48,6 +53,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,10 +62,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -123,12 +126,10 @@ public class MainController implements CuttingEngineObserver, Initializable {
 
     @FXML
     public ComboBox<String> splitterChooser;
-
     /** Solution **/
 
     @FXML
     private VBox solutionRoot;
-
     public TabPane tabPane;
 
     @FXML
@@ -137,7 +138,17 @@ public class MainController implements CuttingEngineObserver, Initializable {
     /** Charts **/
     @FXML
     public LineChart<Long, Double> generationStats;
+
     private ObservableList<XYChart.Data<Long, Double>> series;
+
+    @FXML
+    public LineChart<Long, Double> plotSummary;
+
+    @FXML
+    public TableView<CuttingElement> printSolutionTable;
+
+    @FXML
+    public TableView<Collection<CuttingLayoutElement>> printPatternTable;
 
     @FXML
     public PieChart hitsChart;
@@ -329,7 +340,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
             XYChart.Data<Long, Double> point = new XYChart.Data<>(iteration, fitness);
             series.add(point);
 
-            Node node = point.getNode();
+            /*Node node = point.getNode();
             final Text dataText = new Text(String.valueOf(point.getYValue()));
             node.parentProperty().addListener((ov, oldParent, parent) -> {
                 Group parentGroup = (Group) parent;
@@ -347,7 +358,7 @@ public class MainController implements CuttingEngineObserver, Initializable {
                                 bounds.getMaxY() - dataText.prefHeight(-1) * 0.5
                         )
                 );
-            });
+            });*/
         });
     }
 
@@ -408,23 +419,88 @@ public class MainController implements CuttingEngineObserver, Initializable {
                 .limit(Math.min(bestSolution.getHitsMap().size(), 10))
                 .forEach(e -> pieChartData.add(new PieChart.Data(e.getKey(), e.getValue())));
 
+        generationStats.setVisible(false);
+        plotSummary.dataProperty().set(generationStats.dataProperty().get());
+
+        drawSolutionTable(bestSolution);
+        drawPatternTable(bestSolution);
+
         Platform.runLater(() -> {
             hitsChart.setData(pieChartData);
 
             hitsChart.setTitle("Number of chromosome hits");
 
-            for (Node node : hitsChart.lookupAll(".text.chart-pie-label")) {
-                if (node instanceof Text) {
-                    for (PieChart.Data data : hitsChart.getData()) {
-                        Text text = (Text) node;
-
-                        if (data.getNode() == node) {
-                            text.setText(text.getText() + " " + data.getPieValue() + "%");
-                        }
+            hitsChart.lookupAll(".text.chart-pie-label").stream().filter(node -> node instanceof Text)
+                    .map(node -> ((Text) node)).forEach(node -> {
+                for (PieChart.Data data : hitsChart.getData()) {
+                    if (data.getNode() == node) {
+                        node.setText(node.getText() + " " + data.getPieValue() + "%");
                     }
                 }
-            }
+            });
         });
+    }
+
+    private void drawPatternTable(CuttingSolution bestSolution) {
+        printPatternTable.getColumns().clear();
+        printPatternTable.getItems().clear();
+
+        TableColumn<Collection<CuttingLayoutElement>, Integer> id = new TableColumn<>("Id");
+        id.setCellValueFactory(e -> new SimpleObjectProperty<>(bestSolution.layout().indexOf(e)));
+
+        /*TableColumn<Collection<CuttingLayoutElement>, Integer> print = new TableColumn<>("Prints");
+        print.setCellValueFactory(e -> bestSolution.layout().indexOf(e) == -1 ? null : new SimpleObjectProperty<>((int) bestSolution.patterns()[bestSolution.layout().indexOf(e)]));*/
+
+        TableColumn<Collection<CuttingLayoutElement>, String> occupancy = new TableColumn<>("Occupancy");
+        occupancy.setCellValueFactory(elements -> new SimpleObjectProperty<>(elements.getValue().parallelStream()
+                .mapToDouble(e -> e.element().area())
+                .sum() * 100.d / (configuration.sheet().width() * configuration.sheet().height()) + "%"));
+
+        printPatternTable.getColumns().addAll(id, /*print,*/ occupancy);
+        printPatternTable.setItems(FXCollections.observableArrayList(bestSolution.layout()));
+    }
+
+    private void drawSolutionTable(CuttingSolution bestSolution) {
+        printSolutionTable.getColumns().clear();
+        printSolutionTable.getItems().clear();
+
+        TableColumn<CuttingElement, String> title = new TableColumn<>("Piece");
+        title.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().width()  + " / " + data.getValue().height()));
+
+        TableColumn<CuttingElement, Integer> asked = new TableColumn<>("Asked");
+        asked.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().asking()));
+
+        TableColumn<CuttingElement, Long> printed = new TableColumn<>("Printed");
+
+        printed.setCellValueFactory(data -> {
+
+            long sum = 0;
+
+            for (int i = 0; i < bestSolution.layout().size(); i++) {
+                sum += bestSolution.patterns()[i] * bestSolution.layout().get(i).parallelStream().filter(e -> e.element().id() == data.getValue().id()).count();
+            }
+
+            return new SimpleObjectProperty<>(sum);
+        });
+
+        TableColumn<CuttingElement, Long> total = new TableColumn<>("Extra");
+        total.setCellValueFactory(data -> {
+
+            long sum = 0;
+
+            for (int i = 0; i < bestSolution.layout().size(); i++) {
+                sum += bestSolution.patterns()[i] * bestSolution.layout().get(i).parallelStream().filter(e -> e.element().id() == data.getValue().id()).count();
+            }
+
+            return new SimpleObjectProperty<>(sum - data.getValue().asking());
+        });
+
+
+
+        printSolutionTable.getColumns().addAll(title, asked, printed, total);
+
+        printSolutionTable.setItems(FXCollections.observableArrayList(configuration.elements()));
+
     }
 
     /**

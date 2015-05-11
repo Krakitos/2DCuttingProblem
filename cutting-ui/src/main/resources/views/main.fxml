@@ -128,7 +128,34 @@
                     <GridPane fx:id="solutionDisplayer" prefWidth="${solutionRoot.width}" minWidth="${solutionRoot.width}" hgap="5" vgap="5" />
                 </Tab>
                 <Tab text="Running Summary">
-
+                    <BorderPane>
+                        <padding>
+                            <Insets top="5" bottom="5" left="5" right="5" />
+                        </padding>
+                        <top>
+                            <VBox alignment="CENTER" fillWidth="true">
+                                <Text text="Summary of the generation"/>
+                            </VBox>
+                        </top>
+                        <center>
+                            <VBox>
+                                <LineChart fx:id="plotSummary">
+                                    <xAxis>
+                                        <NumberAxis label="Iterations" lowerBound="0" tickUnit="100" autoRanging="true"/>
+                                    </xAxis>
+                                    <yAxis>
+                                        <NumberAxis label="Price" lowerBound="0" tickUnit="100" autoRanging="true"/>
+                                    </yAxis>
+                                </LineChart>
+                                <HBox>
+                                    <HBox.hgrow>ALWAYS</HBox.hgrow>
+                                    <TableView fx:id="printSolutionTable" />
+                                    <Separator orientation="VERTICAL" />
+                                    <TableView fx:id="printPatternTable" />
+                                </HBox>
+                            </VBox>
+                        </center>
+                    </BorderPane>
                 </Tab>
                 <Tab text="Frequencies">
                     <PieChart fx:id="hitsChart" />
