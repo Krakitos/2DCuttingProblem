@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 
 /**
  * Created by Morgan on 11/03/2015.
@@ -24,7 +25,7 @@ public class Main extends Application {
 
         primaryStage.setTitle("Cutting Problem");
         primaryStage.setOnCloseRequest(event -> System.exit(0));
-
+        primaryStage.getIcons().add(new Image("icons/logo.png"));
         primaryStage.setScene(scene);
         primaryStage.show();
     }
