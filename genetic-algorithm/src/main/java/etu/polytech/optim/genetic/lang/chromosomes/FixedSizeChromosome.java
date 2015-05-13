@@ -10,7 +10,7 @@ import java.util.Arrays;
  */
 public class FixedSizeChromosome implements Chromosome {
 
-    public static final double NOT_COMPUTED_FITNESS = Double.MIN_VALUE;
+    public static final double NOT_COMPUTED_FITNESS = Double.NEGATIVE_INFINITY;
 
     private final int[] representation;
     private double fitness;
