@@ -81,6 +81,22 @@ public class FixedSizePopulation implements Population {
         return it.next();
     }
 
+    @Override
+    public Chromosome getRandomAmongFittest(int limit) {
+        int computedLimit = Math.min(limit, chromosomes.size() - 1);
+
+        int index = Math.max(0, RANDOM.nextInt(computedLimit));
+        int i = 0;
+
+        Iterator<Chromosome> it = chromosomes.iterator();
+
+        while (++i < index - 1) {
+            it.next();
+        }
+
+        return it.next();
+    }
+
     /**
      * Remove the specified chromosome from the population
      * @param chromosome
