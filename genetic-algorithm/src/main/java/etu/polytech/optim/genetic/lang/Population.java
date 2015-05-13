@@ -23,6 +23,14 @@ public interface Population {
      */
     Chromosome getRandom();
 
+
+    /**
+     * Return a random chromosome among the first limit fittest chromosomes
+     * @param limit Nth fittest chromosome
+     * @return
+     */
+    Chromosome getRandomAmongFittest(int limit);
+
     /**
      * Remove the specified chromosome from the population
      * @param chromosome

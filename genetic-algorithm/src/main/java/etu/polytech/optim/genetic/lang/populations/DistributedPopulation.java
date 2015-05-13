@@ -70,6 +70,11 @@ public class DistributedPopulation implements Population{
     }
 
     @Override
+    public Chromosome getRandomAmongFittest(int limit) {
+        return population.getRandomAmongFittest(limit);
+    }
+
+    @Override
     public boolean removeChromosome(@NotNull Chromosome chromosome) {
         return population.removeChromosome(chromosome);
     }
